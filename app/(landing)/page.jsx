@@ -14,12 +14,31 @@ export const revalidate = 60;
 async function getLandingData() {
   const supabase = await createClient();
 
-  // Get the first bank (single-tenant deployment)
-  const { data: bank } = await supabase
-    .from('banks')
-    .select('id, name')
-    .limit(1)
+  // Resolve the root bank from platform_settings
+  const { data: platformSettings } = await supabase
+    .from('platform_settings')
+    .select('root_bank_id')
     .single();
+
+  let bank = null;
+  if (platformSettings?.root_bank_id) {
+    const { data: rootBank } = await supabase
+      .from('banks')
+      .select('id, name')
+      .eq('id', platformSettings.root_bank_id)
+      .single();
+    bank = rootBank;
+  }
+
+  // Fallback to first bank if no root bank set
+  if (!bank) {
+    const { data: firstBank } = await supabase
+      .from('banks')
+      .select('id, name')
+      .limit(1)
+      .single();
+    bank = firstBank;
+  }
 
   if (!bank) return null;
 

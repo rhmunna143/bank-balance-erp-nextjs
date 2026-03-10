@@ -32,6 +32,11 @@ export function BankForm({ onSubmit, loading = false, defaultValues }) {
         <Label>Bank Name *</Label>
         <Input {...register('name')} placeholder="Enter your bank name" />
         {errors.name && <p className="text-xs text-danger">{errors.name.message}</p>}
+        {watch('name') && (
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Your bank URL: <code className="bg-gray-100 px-1 rounded">/{watch('name').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}</code>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

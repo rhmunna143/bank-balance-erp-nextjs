@@ -25,7 +25,10 @@ import {
   Image as ImageIcon,
 } from 'lucide-react';
 import { useBank } from '@/hooks/useBank';
+import { useAuth } from '@/hooks/useAuth';
+import { bankService } from '@/services/bankService';
 import { APP_NAME } from '@/utils/constants';
+import { useState, useEffect } from 'react';
 
 const navItems = [
   {
@@ -91,14 +94,15 @@ const navItems = [
   },
 ];
 
-function NavItem({ item, isAdmin, onClose, pathname }) {
+function NavItem({ item, isAdmin, onClose, pathname, buildLink }) {
   if (item.adminOnly && !isAdmin) return null;
 
-  const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path + '/'));
+  const href = buildLink(item.path);
+  const isActive = pathname === href || (item.path !== '/dashboard' && pathname.startsWith(href + '/'));
 
   return (
     <Link
-      href={item.path}
+      href={href}
       onClick={onClose}
       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
         isActive
@@ -113,8 +117,28 @@ function NavItem({ item, isAdmin, onClose, pathname }) {
 }
 
 export function Sidebar({ open, onClose }) {
-  const { isAdmin, bank } = useBank();
+  const { isAdmin, bank, bankSlug } = useBank();
+  const { isSuperAdmin } = useAuth();
   const pathname = usePathname();
+  const [isRootBank, setIsRootBank] = useState(false);
+
+  useEffect(() => {
+    const checkRoot = async () => {
+      if (!bank) return;
+      try {
+        const rootBank = await bankService.getRootBank();
+        setIsRootBank(rootBank?.bank_id === bank.id);
+      } catch {
+        setIsRootBank(false);
+      }
+    };
+    checkRoot();
+  }, [bank]);
+
+  const buildLink = (path) => {
+    const base = isRootBank ? '' : `/${bankSlug}`;
+    return `${base}${path}`;
+  };
 
   return (
     <aside
@@ -138,6 +162,20 @@ export function Sidebar({ open, onClose }) {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+        {isSuperAdmin && (
+          <Link
+            href="/superadmin"
+            onClick={onClose}
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors mb-2 ${
+              pathname.startsWith('/superadmin')
+                ? 'bg-yellow-100 text-yellow-800 font-medium'
+                : 'text-yellow-600 hover:bg-yellow-50'
+            }`}
+          >
+            <Settings className="h-4 w-4 flex-shrink-0" />
+            <span>SuperAdmin Panel</span>
+          </Link>
+        )}
         {navItems.map((item) => {
           if (item.children) {
             const visibleChildren = item.children.filter(
@@ -152,7 +190,7 @@ export function Sidebar({ open, onClose }) {
                 </p>
                 <div className="space-y-0.5">
                   {visibleChildren.map((child) => (
-                    <NavItem key={child.path} item={child} isAdmin={isAdmin} onClose={onClose} pathname={pathname} />
+                    <NavItem key={child.path} item={child} isAdmin={isAdmin} onClose={onClose} pathname={pathname} buildLink={buildLink} />
                   ))}
                 </div>
               </div>
@@ -161,7 +199,7 @@ export function Sidebar({ open, onClose }) {
 
           if (item.adminOnly && !isAdmin) return null;
 
-          return <NavItem key={item.path} item={item} isAdmin={isAdmin} onClose={onClose} pathname={pathname} />;
+          return <NavItem key={item.path} item={item} isAdmin={isAdmin} onClose={onClose} pathname={pathname} buildLink={buildLink} />;
         })}
       </nav>
     </aside>

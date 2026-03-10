@@ -1,13 +1,38 @@
 import { supabase } from './supabaseClient';
-import { DEFAULT_EXPENSE_CATEGORIES } from '@/utils/constants';
+import { DEFAULT_EXPENSE_CATEGORIES, RESERVED_SLUGS } from '@/utils/constants';
 
 export const bankService = {
+  generateSlug(name) {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  },
+
+  async getBySlug(slug) {
+    const { data, error } = await supabase.rpc('get_bank_by_slug', { p_slug: slug });
+    if (error) throw error;
+    return data?.[0] || null;
+  },
+
+  async getRootBank() {
+    const { data, error } = await supabase.rpc('get_root_bank');
+    if (error) throw error;
+    return data?.[0] || null;
+  },
+
   async create(bankData, userId) {
+    const slug = this.generateSlug(bankData.name);
+    if (RESERVED_SLUGS.includes(slug)) {
+      throw new Error(`The name "${bankData.name}" generates a reserved URL. Please choose a different name.`);
+    }
+
     // Step 1: Create bank — don't use .select() yet (SELECT RLS requires bank_members)
     const { data: bankRows, error: bankError } = await supabase
       .from('banks')
       .insert({
         name: bankData.name,
+        slug,
         currency: bankData.currency,
         owner_id: userId,
       })
@@ -20,6 +45,7 @@ export const bankService = {
         .from('banks')
         .insert({
           name: bankData.name,
+          slug,
           currency: bankData.currency,
           owner_id: userId,
         });

@@ -32,10 +32,25 @@ export const ACCOUNT_TYPES = {
 };
 
 export const ROLES = {
+  superadmin: 'SuperAdmin',
   owner: 'Owner',
   admin: 'Admin',
   operator: 'Operator',
 };
+
+export const RESERVED_SLUGS = [
+  'login',
+  'register',
+  'forgot-password',
+  'reset-password',
+  'create-bank',
+  'superadmin',
+  'api',
+  'profile',
+  'settings',
+  'dashboard',
+  'admin',
+];
 
 export const REPORT_PERIODS = {
   today: 'Today',

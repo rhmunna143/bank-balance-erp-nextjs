@@ -4,6 +4,7 @@ import { bankService } from '@/services/bankService';
 export const useBankStore = create((set, get) => ({
   bank: null,
   userRole: null,
+  bankSlug: null,
   expenseCategories: [],
   loading: true,
   loaded: false,
@@ -15,14 +16,31 @@ export const useBankStore = create((set, get) => ({
       if (result) {
         const { userRole, ...bank } = result;
         const categories = await bankService.getExpenseCategories(bank.id);
-        set({ bank, userRole, expenseCategories: categories, loading: false, loaded: true });
+        set({ bank, userRole, bankSlug: bank.slug, expenseCategories: categories, loading: false, loaded: true });
         return bank;
       }
-      set({ bank: null, userRole: null, loading: false, loaded: true });
+      set({ bank: null, userRole: null, bankSlug: null, loading: false, loaded: true });
       return null;
     } catch (error) {
       console.error('Load bank error:', error);
-      set({ bank: null, userRole: null, loading: false, loaded: true });
+      set({ bank: null, userRole: null, bankSlug: null, loading: false, loaded: true });
+      return null;
+    }
+  },
+
+  loadBankBySlug: async (slug) => {
+    set({ loading: true });
+    try {
+      const bank = await bankService.getBySlug(slug);
+      if (bank) {
+        set({ bank, bankSlug: slug, loading: false, loaded: true });
+        return bank;
+      }
+      set({ bank: null, bankSlug: null, loading: false, loaded: true });
+      return null;
+    } catch (error) {
+      console.error('Load bank by slug error:', error);
+      set({ bank: null, bankSlug: null, loading: false, loaded: true });
       return null;
     }
   },
@@ -35,7 +53,7 @@ export const useBankStore = create((set, get) => ({
     } catch (e) {
       console.warn('Could not load categories after bank creation:', e);
     }
-    set({ bank, userRole: 'owner', expenseCategories: categories, loading: false });
+    set({ bank, userRole: 'owner', bankSlug: bank.slug, expenseCategories: categories, loading: false });
     return bank;
   },
 

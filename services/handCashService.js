@@ -6,7 +6,7 @@ export const handCashService = {
       .from('hand_cash_accounts')
       .select('*')
       .eq('bank_id', bankId)
-      .single();
+      .maybeSingle();
     if (error) throw error;
     return data;
   },

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { bankService } from '@/services/bankService';
+import { supabase } from '@/services/supabaseClient';
 
 export const useBankStore = create((set, get) => ({
   bank: null,
@@ -33,14 +34,31 @@ export const useBankStore = create((set, get) => ({
     try {
       const bank = await bankService.getBySlug(slug);
       if (bank) {
-        set({ bank, bankSlug: slug, loading: false, loaded: true });
+        // Try to resolve the user's role for this bank
+        let userRole = null;
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: membership } = await supabase
+              .from('bank_members')
+              .select('role')
+              .eq('bank_id', bank.id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            userRole = membership?.role || null;
+          }
+        } catch (_) {
+          // Not authenticated or no membership — leave role null
+        }
+        const categories = userRole ? await bankService.getExpenseCategories(bank.id) : [];
+        set({ bank, userRole, bankSlug: slug, expenseCategories: categories, loading: false, loaded: true });
         return bank;
       }
-      set({ bank: null, bankSlug: null, loading: false, loaded: true });
+      set({ bank: null, userRole: null, bankSlug: null, loading: false, loaded: true });
       return null;
     } catch (error) {
       console.error('Load bank by slug error:', error);
-      set({ bank: null, bankSlug: null, loading: false, loaded: true });
+      set({ bank: null, userRole: null, bankSlug: null, loading: false, loaded: true });
       return null;
     }
   },

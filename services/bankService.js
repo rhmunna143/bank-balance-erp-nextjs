@@ -130,12 +130,13 @@ export const bankService = {
   },
 
   async getByMember(userId) {
-    const { data: membership, error: memError } = await supabase
+    const { data, error } = await supabase
       .from('bank_members')
       .select('bank_id, role, banks(*)')
       .eq('user_id', userId)
-      .single();
-    if (memError && memError.code !== 'PGRST116') throw memError;
+      .limit(1);
+    if (error) throw error;
+    const membership = data?.[0];
     if (!membership) return null;
     return { ...membership.banks, userRole: membership.role };
   },

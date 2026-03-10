@@ -7,7 +7,7 @@ export const useBankStore = create((set, get) => ({
   userRole: null,
   bankSlug: null,
   expenseCategories: [],
-  loading: true,
+  loading: false,
   loaded: false,
 
   loadBank: async (userId) => {
@@ -24,8 +24,7 @@ export const useBankStore = create((set, get) => ({
       return null;
     } catch (error) {
       console.error('Load bank error:', error);
-      // Don't mark as loaded on error — allow retry
-      set({ loading: false });
+      set({ bank: null, userRole: null, bankSlug: null, loading: false, loaded: true });
       return null;
     }
   },

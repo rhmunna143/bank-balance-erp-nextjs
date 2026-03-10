@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
@@ -17,27 +17,20 @@ export function AppLayout({ children }) {
   const bankLoaded = useBankStore((state) => state.loaded);
   const loadBank = useBankStore((state) => state.loadBank);
   const router = useRouter();
-  const retryCount = useRef(0);
 
   useEffect(() => {
     if (!initialized || !user) return;
-    // Bank already loaded (e.g. via slug route) — skip
     if (bank || bankLoaded) return;
-    if (bankLoading) return;
-    if (retryCount.current >= 3) return;
-
-    retryCount.current += 1;
     loadBank(user.id);
-  }, [initialized, user, bank, bankLoaded, bankLoading, loadBank]);
+  }, [initialized, user, bank, bankLoaded, loadBank]);
 
-  // Only redirect after auth is initialized, loadBank has completed, and found no bank
   useEffect(() => {
     if (initialized && bankLoaded && !bank && user) {
       router.push('/create-bank');
     }
   }, [initialized, bankLoaded, bank, user, router]);
 
-  if (!initialized || bankLoading || !bankLoaded) return <FullPageSpinner />;
+  if (!initialized || !bankLoaded) return <FullPageSpinner />;
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">

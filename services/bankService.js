@@ -79,7 +79,7 @@ export const bankService = {
 
     // Step 6: Seed default landing sections
     const defaultSections = [
-      { section_key: 'hero', title: 'Your Trusted Banking Partner', subtitle: 'Empowering communities through accessible and reliable agent banking services.', sort_order: 0, content: {} },
+      { section_key: 'hero', title: 'Your Trusted Banking Partner', subtitle: 'Empowering communities through accessible and reliable agent banking services.', sort_order: 0, content: { cta_text: 'Contact Us', cta_link: '#contact' } },
       { section_key: 'about', title: 'About Us', subtitle: 'Building trust through reliable banking services', sort_order: 1, content: { description: 'We are committed to providing exceptional banking services to empower local communities. Our agent banking solutions bridge the gap between traditional banking and underserved populations.' } },
       { section_key: 'services', title: 'Our Services', subtitle: 'Comprehensive banking solutions for your needs', sort_order: 2 },
       { section_key: 'stats', title: 'Our Impact', sort_order: 3, content: { items: [{ label: 'Customers Served', value: 1000 }, { label: 'Transactions', value: 5000 }, { label: 'Years of Service', value: 3 }, { label: 'Agents', value: 10 }] } },

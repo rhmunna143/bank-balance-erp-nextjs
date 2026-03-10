@@ -24,15 +24,13 @@ export function HeroSection({ title, subtitle, backgroundImageUrl, ctaText, ctaL
         <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
           {subtitle || 'Experience seamless agent banking services with modern technology and trusted support.'}
         </p>
-        {ctaText && ctaLink && (
-          <Link
-            href={ctaLink}
-            className="inline-block px-8 py-3 rounded-lg text-white font-medium text-lg transition-transform hover:scale-105"
-            style={{ backgroundColor: primaryColor || '#1a56db' }}
-          >
-            {ctaText}
-          </Link>
-        )}
+        <Link
+          href={ctaLink || '#contact'}
+          className="inline-block px-8 py-3 rounded-lg text-white font-medium text-lg transition-transform hover:scale-105"
+          style={{ backgroundColor: primaryColor || '#1a56db' }}
+        >
+          {ctaText || 'Contact Us'}
+        </Link>
       </div>
     </section>
   );

@@ -24,7 +24,8 @@ export const useBankStore = create((set, get) => ({
       return null;
     } catch (error) {
       console.error('Load bank error:', error);
-      set({ bank: null, userRole: null, bankSlug: null, loading: false, loaded: true });
+      // Don't mark as loaded on error — allow retry
+      set({ loading: false });
       return null;
     }
   },

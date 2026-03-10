@@ -11,7 +11,7 @@ export default function NotFound() {
         <FileQuestion className="mx-auto h-16 w-16 text-[var(--color-text-muted)]" />
         <h1 className="text-4xl font-bold">404</h1>
         <p className="text-[var(--color-text-muted)]">Page not found</p>
-        <Link href="/">
+        <Link href="/dashboard">
           <Button>Go to Dashboard</Button>
         </Link>
       </div>

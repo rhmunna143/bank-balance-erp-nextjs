@@ -67,6 +67,29 @@ export const bankService = {
       .insert(categories);
     if (catError) throw catError;
 
+    // Step 5: Seed default site_settings for landing page
+    await supabase.from('site_settings').insert({
+      bank_id: bank.id,
+      site_name: bankData.name,
+      tagline: 'Your Trusted Banking Partner',
+      primary_color: '#1a56db',
+      secondary_color: '#7c3aed',
+      footer_text: `© ${new Date().getFullYear()} ${bankData.name}. All rights reserved.`,
+    });
+
+    // Step 6: Seed default landing sections
+    const defaultSections = [
+      { section_key: 'hero', title: 'Your Trusted Banking Partner', subtitle: 'Empowering communities through accessible and reliable agent banking services.', sort_order: 0, content: {} },
+      { section_key: 'about', title: 'About Us', subtitle: 'Building trust through reliable banking services', sort_order: 1, content: { description: 'We are committed to providing exceptional banking services to empower local communities. Our agent banking solutions bridge the gap between traditional banking and underserved populations.' } },
+      { section_key: 'services', title: 'Our Services', subtitle: 'Comprehensive banking solutions for your needs', sort_order: 2 },
+      { section_key: 'stats', title: 'Our Impact', sort_order: 3, content: { items: [{ label: 'Customers Served', value: 1000 }, { label: 'Transactions', value: 5000 }, { label: 'Years of Service', value: 3 }, { label: 'Agents', value: 10 }] } },
+      { section_key: 'testimonials', title: 'What Our Customers Say', subtitle: 'Hear from the people we serve', sort_order: 4 },
+      { section_key: 'faq', title: 'Frequently Asked Questions', subtitle: 'Find answers to common questions', sort_order: 5 },
+      { section_key: 'cta', title: 'Ready to Get Started?', subtitle: 'Join us today and experience modern banking services.', sort_order: 6 },
+    ].map((s) => ({ bank_id: bank.id, is_active: true, ...s }));
+
+    await supabase.from('landing_sections').insert(defaultSections);
+
     return bank;
   },
 

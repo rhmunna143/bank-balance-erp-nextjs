@@ -73,7 +73,7 @@ export function Topbar({ onMenuClick }) {
 
         {/* Alerts bell */}
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/dashboard')}
           className="relative rounded-md p-2 hover:bg-gray-100"
         >
           <Bell className="h-5 w-5 text-[var(--color-text-muted)]" />

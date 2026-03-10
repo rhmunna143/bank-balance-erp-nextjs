@@ -36,7 +36,7 @@ export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmi
 
   const amount = watch('amount');
   const shortageEnabled = watch('shortage_enabled');
-  const hasShortage = amount && parseFloat(amount) > handCashBalance;
+  const hasShortage = amount && !isNaN(parseFloat(amount)) && parseFloat(amount) > handCashBalance;
 
   const handleFormSubmit = async (data) => {
     await onSubmit(data);
@@ -163,7 +163,7 @@ export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmi
 
       <Button
         type="submit"
-        disabled={loading || (hasShortage && !shortageEnabled)}
+        disabled={!!loading || !!(hasShortage && !shortageEnabled)}
         className="w-full md:w-auto"
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -25,7 +25,7 @@ export default function CreateBankPage() {
     try {
       await createBank(data, user.id);
       toast.success("Bank created successfully!");
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       toast.error(error.message || "Failed to create bank");
     } finally {

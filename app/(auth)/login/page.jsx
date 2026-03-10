@@ -39,7 +39,7 @@ export default function LoginPage() {
     try {
       await signIn(data.email, data.password);
       toast.success("Welcome back!");
-      router.push("/");
+      router.push("/dashboard");
     } catch (error) {
       toast.error(error.message || "Login failed");
     } finally {

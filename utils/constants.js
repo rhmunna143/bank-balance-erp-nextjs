@@ -54,5 +54,11 @@ export const CASH_IN_SOURCES = [
   'Other',
 ];
 
+export const LOAN_STATUSES = {
+  active: 'Active',
+  partially_returned: 'Partially Returned',
+  returned: 'Returned',
+};
+
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'AgentBank ERP';
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';

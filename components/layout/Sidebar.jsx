@@ -19,6 +19,10 @@ import {
   User,
   X,
   CreditCard,
+  Landmark,
+  Globe,
+  Layers,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useBank } from '@/hooks/useBank';
 import { APP_NAME } from '@/utils/constants';
@@ -26,7 +30,7 @@ import { APP_NAME } from '@/utils/constants';
 const navItems = [
   {
     label: 'Dashboard',
-    path: '/',
+    path: '/dashboard',
     icon: LayoutDashboard,
   },
   {
@@ -52,6 +56,12 @@ const navItems = [
     icon: Receipt,
   },
   {
+    label: 'Loans',
+    path: '/loans',
+    icon: Landmark,
+    adminOnly: true,
+  },
+  {
     label: 'Reports',
     path: '/reports',
     icon: FileBarChart,
@@ -70,12 +80,21 @@ const navItems = [
       { label: 'Profile', path: '/profile', icon: User },
     ],
   },
+  {
+    label: 'Website',
+    children: [
+      { label: 'CMS Dashboard', path: '/admin', icon: Globe, adminOnly: true },
+      { label: 'Site Settings', path: '/admin/site-settings', icon: Settings, adminOnly: true },
+      { label: 'Services', path: '/admin/services', icon: Layers, adminOnly: true },
+      { label: 'Gallery', path: '/admin/gallery', icon: ImageIcon, adminOnly: true },
+    ],
+  },
 ];
 
 function NavItem({ item, isAdmin, onClose, pathname }) {
   if (item.adminOnly && !isAdmin) return null;
 
-  const isActive = item.path === '/' ? pathname === '/' : pathname === item.path;
+  const isActive = pathname === item.path || (item.path !== '/dashboard' && pathname.startsWith(item.path + '/'));
 
   return (
     <Link

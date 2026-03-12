@@ -32,10 +32,25 @@ export const ACCOUNT_TYPES = {
 };
 
 export const ROLES = {
+  superadmin: 'SuperAdmin',
   owner: 'Owner',
   admin: 'Admin',
   operator: 'Operator',
 };
+
+export const RESERVED_SLUGS = [
+  'login',
+  'register',
+  'forgot-password',
+  'reset-password',
+  'create-bank',
+  'superadmin',
+  'api',
+  'profile',
+  'settings',
+  'dashboard',
+  'admin',
+];
 
 export const REPORT_PERIODS = {
   today: 'Today',
@@ -53,6 +68,12 @@ export const CASH_IN_SOURCES = [
   'Personal',
   'Other',
 ];
+
+export const LOAN_STATUSES = {
+  active: 'Active',
+  partially_returned: 'Partially Returned',
+  returned: 'Returned',
+};
 
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'AgentBank ERP';
 export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0';

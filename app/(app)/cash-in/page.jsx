@@ -184,6 +184,7 @@ export default function CashInPage() {
             motherAccounts={motherAccounts.filter((a) => a.is_active)}
             profitAccounts={profitAccounts || []}
             handCashId={handCash?.id}
+            handCashBalance={handCash?.balance || 0}
           />
         </CardContent>
       </Card>

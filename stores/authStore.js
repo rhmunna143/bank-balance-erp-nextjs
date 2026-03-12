@@ -5,6 +5,7 @@ export const useAuthStore = create((set, get) => ({
   user: null,
   profile: null,
   session: null,
+  isSuperAdmin: false,
   loading: true,
   initialized: false,
 
@@ -18,9 +19,9 @@ export const useAuthStore = create((set, get) => ({
         } catch (e) {
           console.warn('Profile not found, continuing without it');
         }
-        set({ user: session.user, profile, session, loading: false, initialized: true });
+        set({ user: session.user, profile, session, isSuperAdmin: profile?.is_superadmin === true, loading: false, initialized: true });
       } else {
-        set({ user: null, profile: null, session: null, loading: false, initialized: true });
+        set({ user: null, profile: null, session: null, isSuperAdmin: false, loading: false, initialized: true });
       }
 
       // Listen for auth state changes (login, logout, token refresh)
@@ -30,14 +31,14 @@ export const useAuthStore = create((set, get) => ({
           try {
             profile = await authService.getProfile(newSession.user.id);
           } catch (e) { /* profile may not exist yet */ }
-          set({ user: newSession.user, profile, session: newSession });
+          set({ user: newSession.user, profile, session: newSession, isSuperAdmin: profile?.is_superadmin === true });
         } else {
-          set({ user: null, profile: null, session: null });
+          set({ user: null, profile: null, session: null, isSuperAdmin: false });
         }
       });
     } catch (error) {
       console.error('Auth init error:', error);
-      set({ user: null, profile: null, session: null, loading: false, initialized: true });
+      set({ user: null, profile: null, session: null, isSuperAdmin: false, loading: false, initialized: true });
     }
   },
 
@@ -49,7 +50,7 @@ export const useAuthStore = create((set, get) => ({
     } catch (e) {
       console.warn('Profile not found after login');
     }
-    set({ user: data.user, profile, session: data.session });
+    set({ user: data.user, profile, session: data.session, isSuperAdmin: profile?.is_superadmin === true });
     return data;
   },
 
@@ -60,7 +61,7 @@ export const useAuthStore = create((set, get) => ({
 
   signOut: async () => {
     await authService.signOut();
-    set({ user: null, profile: null, session: null });
+    set({ user: null, profile: null, session: null, isSuperAdmin: false });
   },
 
   updateProfile: async (updates) => {

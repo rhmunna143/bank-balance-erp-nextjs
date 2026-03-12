@@ -95,3 +95,19 @@ export const changePasswordSchema = z.object({
   message: 'Passwords do not match',
   path: ['confirmPassword'],
 });
+
+export const loanIssueSchema = z.object({
+  borrower_user_id: z.string().uuid('Please select a borrower'),
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
+  source_type: z.enum(['hand_cash', 'mother_account', 'profit_account'], {
+    required_error: 'Please select a source type',
+  }),
+  source_account_id: z.string().optional(),
+  due_date: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+export const loanReturnSchema = z.object({
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
+  notes: z.string().optional(),
+});

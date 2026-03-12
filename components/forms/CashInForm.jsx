@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { numberToWords } from '@/utils/numberToWords';
 
-const EXTERNAL_SOURCES = ['Head Office', 'Branch', 'Personal', 'Other'];
+const EXTERNAL_SOURCES = ['Hand Cash', 'Head Office', 'Branch', 'Personal', 'Other'];
 
-export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashId, onSubmit, loading = false }) {
+export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashId, handCashBalance = 0, onSubmit, loading = false }) {
   const {
     register,
     handleSubmit,
@@ -33,6 +33,8 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
   });
 
   const targetType = watch('target_type');
+  const sourceValue = watch('source');
+  const isHandCashSource = sourceValue === 'Hand Cash';
 
   const getTargetOptions = () => {
     switch (targetType) {
@@ -73,9 +75,9 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
               <SelectValue placeholder="Which account to fund?" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="hand_cash">Hand Cash</SelectItem>
+              {!isHandCashSource && <SelectItem value="hand_cash">Hand Cash</SelectItem>}
               <SelectItem value="mother_account">Mother Account</SelectItem>
-              <SelectItem value="profit_account">Profit Account</SelectItem>
+              {!isHandCashSource && <SelectItem value="profit_account">Profit Account</SelectItem>}
             </SelectContent>
           </Select>
           {errors.target_type && (
@@ -120,7 +122,14 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
 
         <div className="space-y-2">
           <Label>Source</Label>
-          <Select onValueChange={(val) => setValue('source', val)}>
+          <Select onValueChange={(val) => {
+            setValue('source', val);
+            // If Hand Cash source selected and target is hand_cash, reset target
+            if (val === 'Hand Cash' && (watch('target_type') === 'hand_cash' || watch('target_type') === 'profit_account')) {
+              setValue('target_type', '');
+              setValue('target_id', '');
+            }
+          }}>
             <SelectTrigger>
               <SelectValue placeholder="Where is the money from?" />
             </SelectTrigger>
@@ -132,6 +141,11 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
               ))}
             </SelectContent>
           </Select>
+          {isHandCashSource && (
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Hand Cash balance will be deducted
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

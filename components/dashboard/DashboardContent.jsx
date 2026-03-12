@@ -16,7 +16,6 @@ import { TransactionTable } from "@/components/tables/TransactionTable";
 import { BalanceAlert } from "@/components/alerts/BalanceAlert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
 import { Button } from "@/components/ui/Button";
 import { dailyLogService } from "@/services/dailyLogService";
 import {
@@ -29,7 +28,7 @@ import {
 import { formatCurrency } from "@/utils/currency";
 import toast from "react-hot-toast";
 
-export default function DashboardPage() {
+export default function DashboardContent() {
   const { user } = useAuth();
   const { bank, bankId, currencySymbol } = useBank();
   const { accounts: motherAccounts } = useMotherAccounts();
@@ -121,9 +120,8 @@ export default function DashboardPage() {
   const handleGenerateDailyLog = async () => {
     setGeneratingLog(true);
     try {
-      const newLog = await dailyLogService.generate(bankId, user.id);
+      await dailyLogService.generate(bankId, user.id);
       toast.success("Daily log generated!");
-      // Refresh logs list
       const logs = await dailyLogService.getLatest(bankId, 14);
       if (logs)
         setDailyLogs(

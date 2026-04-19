@@ -18,7 +18,12 @@ export const reportService = {
     // Transactions (deposits, withdrawals, cash_in) — single query gets ALL types
     if (includeTransactions) {
       promises.push(
-        transactionService.getTransactions(bankId, { startDate: startISO, endDate: endISO, limit: 5000 }),
+        transactionService.getTransactions(bankId, {
+          startDate: startISO,
+          endDate: endISO,
+          limit: 5000,
+          excludeReversed: true,
+        }),
       );
     } else {
       promises.push(Promise.resolve({ data: [] }));

@@ -12,6 +12,10 @@ import { useBank } from '@/hooks/useBank';
 import { numberToWords } from '@/utils/numberToWords';
 import { LOAN_STATUSES } from '@/utils/constants';
 
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function LoanReturnForm({ loan, onSubmit, loading = false }) {
   const { currencySymbol } = useBank();
   const remaining = parseFloat(loan.amount) - parseFloat(loan.returned_amount || 0);
@@ -25,8 +29,10 @@ export function LoanReturnForm({ loan, onSubmit, loading = false }) {
   } = useForm({
     resolver: zodResolver(loanReturnSchema),
     defaultValues: {
+      trn_id: '',
       amount: '',
       notes: '',
+      created_at: getToday(),
     },
   });
 
@@ -89,6 +95,16 @@ export function LoanReturnForm({ loan, onSubmit, loading = false }) {
         <div className="space-y-2">
           <Label>Notes</Label>
           <Input {...register('notes')} placeholder="Return details" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>TRN ID</Label>
+          <Input {...register('trn_id')} placeholder="Optional transaction id" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Return Date</Label>
+          <Input type="date" {...register('created_at')} />
         </div>
 
         <Button type="submit" disabled={loading || amountValue > remaining} className="w-full">

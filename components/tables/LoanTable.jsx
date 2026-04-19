@@ -19,7 +19,7 @@ const SOURCE_LABELS = {
   profit_account: 'Profit Account',
 };
 
-export function LoanTable({ loans = [], onReturn }) {
+export function LoanTable({ loans = [], onReturn, onSelect }) {
   const { currencySymbol } = useBank();
 
   if (loans.length === 0) {
@@ -50,10 +50,17 @@ export function LoanTable({ loans = [], onReturn }) {
           {loans.map((loan) => {
             const remaining = parseFloat(loan.amount) - parseFloat(loan.returned_amount || 0);
             return (
-              <tr key={loan.id} className="border-b border-border hover:bg-gray-50 transition-colors">
+              <tr
+                key={loan.id}
+                className="border-b border-border hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => onSelect?.(loan)}
+              >
                 <td className="py-3 px-4">
                   <p className="font-medium">{loan.borrower?.full_name || 'Unknown'}</p>
                   <p className="text-xs text-[var(--color-text-muted)]">{loan.borrower?.email}</p>
+                  {loan.trn_id && (
+                    <p className="text-xs text-[var(--color-primary)]">TRN: {loan.trn_id}</p>
+                  )}
                 </td>
                 <td className="py-3 px-4 text-right font-medium">
                   {formatCurrency(loan.amount, currencySymbol)}
@@ -83,7 +90,10 @@ export function LoanTable({ loans = [], onReturn }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onReturn?.(loan)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onReturn?.(loan);
+                      }}
                       title="Return loan"
                     >
                       <RotateCcw className="h-4 w-4 mr-1" />

@@ -509,6 +509,7 @@ export default function ReportsPage() {
                       <thead>
                         <tr className="border-b border-[var(--color-border)]">
                           <th className="text-left py-2 px-3">Date</th>
+                          <th className="text-left py-2 px-3">TRN ID</th>
                           <th className="text-left py-2 px-3">Type</th>
                           <th className="text-left py-2 px-3">Customer</th>
                           <th className="text-left py-2 px-3">Account No.</th>
@@ -538,6 +539,9 @@ export default function ReportsPage() {
                             >
                               <td className="py-2 px-3 whitespace-nowrap">
                                 {formatDate(txn.created_at)}
+                              </td>
+                              <td className="py-2 px-3 whitespace-nowrap">
+                                {txn.trn_id || "-"}
                               </td>
                               <td className="py-2 px-3 capitalize">
                                 {txn.type?.replace("_", " ")}
@@ -595,7 +599,7 @@ export default function ReportsPage() {
                           );
                           return (
                             <tr className="border-t-2 border-[var(--color-border)] font-bold bg-[var(--color-surface)]">
-                              <td colSpan={7} className="py-2 px-3 text-right">
+                              <td colSpan={8} className="py-2 px-3 text-right">
                                 Total
                               </td>
                               <td className="py-2 px-3 text-right text-success">
@@ -628,6 +632,7 @@ export default function ReportsPage() {
                       <thead>
                         <tr className="border-b border-[var(--color-border)]">
                           <th className="text-left py-2 px-3">Date</th>
+                          <th className="text-left py-2 px-3">TRN ID</th>
                           <th className="text-left py-2 px-3">Category</th>
                           <th className="text-left py-2 px-3">Description</th>
                           <th className="text-left py-2 px-3">
@@ -645,6 +650,9 @@ export default function ReportsPage() {
                           >
                             <td className="py-2 px-3 whitespace-nowrap">
                               {formatDate(exp.created_at)}
+                            </td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              {exp.trn_id || "-"}
                             </td>
                             <td className="py-2 px-3">
                               {exp.expense_categories?.name || "-"}
@@ -669,7 +677,7 @@ export default function ReportsPage() {
                       </tbody>
                       <tfoot>
                         <tr className="border-t-2 border-[var(--color-border)] font-bold bg-[var(--color-surface)]">
-                          <td colSpan={5} className="py-2 px-3 text-right">
+                          <td colSpan={6} className="py-2 px-3 text-right">
                             Total Expense
                           </td>
                           <td className="py-2 px-3 text-right text-danger">

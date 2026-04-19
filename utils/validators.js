@@ -38,6 +38,7 @@ export const depositSchema = z.object({
   customer_name: z.string().min(1, 'Customer name is required'),
   customer_phone: z.string().optional(),
   customer_account_no: z.string().optional(),
+  trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   mother_account_id: z.string().uuid('Please select a mother account'),
   description: z.string().optional(),
@@ -48,6 +49,7 @@ export const withdrawalSchema = z.object({
   customer_name: z.string().min(1, 'Customer name is required'),
   customer_phone: z.string().optional(),
   customer_account_no: z.string().optional(),
+  trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   mother_account_id: z.string().uuid('Please select a mother account'),
   shortage_enabled: z.boolean().default(false),
@@ -62,14 +64,17 @@ export const cashInSchema = z.object({
     required_error: 'Please select a target account type',
   }),
   target_id: z.string().optional(),
+  trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   source: z.string().optional(),
   reference: z.string().optional(),
   notes: z.string().optional(),
+  created_at: z.string().optional(),
 });
 
 export const expenseSchema = z.object({
   category_id: z.string().uuid('Please select a category'),
+  trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   particulars: z.string().optional(),
   deducted_from_type: z.enum(['profit_account', 'mother_account', 'hand_cash']),
@@ -98,6 +103,7 @@ export const changePasswordSchema = z.object({
 
 export const loanIssueSchema = z.object({
   borrower_user_id: z.string().uuid('Please select a borrower'),
+  trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   source_type: z.enum(['hand_cash', 'mother_account', 'profit_account'], {
     required_error: 'Please select a source type',
@@ -108,6 +114,25 @@ export const loanIssueSchema = z.object({
 });
 
 export const loanReturnSchema = z.object({
+  trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   notes: z.string().optional(),
+  created_at: z.string().optional(),
+});
+
+export const fundTransferSchema = z.object({
+  trn_id: z.string().optional(),
+  amount: z.coerce.number().positive('Amount must be greater than 0'),
+  source_type: z.enum(['mother_account', 'profit_account', 'hand_cash'], {
+    required_error: 'Please select a source account type',
+  }),
+  source_account_id: z.string().optional(),
+  destination_type: z.enum(['mother_account', 'profit_account', 'hand_cash', 'external_holder'], {
+    required_error: 'Please select destination account type',
+  }),
+  destination_account_id: z.string().optional(),
+  destination_name: z.string().optional(),
+  destination_account: z.string().optional(),
+  notes: z.string().optional(),
+  created_at: z.string().optional(),
 });

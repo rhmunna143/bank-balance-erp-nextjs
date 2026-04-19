@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/Dialog";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
+import { userService } from "@/services/userService";
 import { ROLES } from "@/utils/constants";
 import { Users, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
@@ -36,6 +37,10 @@ export default function UserManagementPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("operator");
   const [submitting, setSubmitting] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetTarget, setResetTarget] = useState(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [resetting, setResetting] = useState(false);
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -76,6 +81,34 @@ export default function UserManagementPage() {
     }
   };
 
+  const handleResetClick = (member) => {
+    setResetTarget(member);
+    setNewPassword("");
+    setResetOpen(true);
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!resetTarget?.user_id) return;
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    setResetting(true);
+    try {
+      await userService.resetMemberPassword(resetTarget.user_id, newPassword);
+      toast.success("Password reset successful");
+      setResetOpen(false);
+      setResetTarget(null);
+      setNewPassword("");
+    } catch (error) {
+      toast.error(error.message || "Failed to reset password");
+    } finally {
+      setResetting(false);
+    }
+  };
+
   if (loading) return <LoadingSpinner className="h-64" />;
 
   return (
@@ -113,6 +146,7 @@ export default function UserManagementPage() {
               currentUserId={user?.id}
               onRoleChange={handleRoleChange}
               onRemove={handleRemove}
+              onResetPassword={handleResetClick}
             />
           )}
         </CardContent>
@@ -163,6 +197,42 @@ export default function UserManagementPage() {
               </Button>
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Sending..." : "Send Invitation"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Member Password</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Set a new password for {resetTarget?.profiles?.full_name || resetTarget?.profiles?.email || "this user"}.
+            </p>
+            <div>
+              <Label htmlFor="new-password">New Password</Label>
+              <Input
+                id="new-password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Minimum 6 characters"
+                required
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setResetOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={resetting}>
+                {resetting ? "Resetting..." : "Reset Password"}
               </Button>
             </div>
           </form>

@@ -112,21 +112,28 @@ CREATE OR REPLACE FUNCTION public.process_loan_issue(
 DECLARE
   v_expense_id UUID;
   v_loan_id UUID;
-  v_category_id UUID;
 BEGIN
-  -- Get or create "Loan" expense category
-  SELECT id INTO v_category_id FROM public.expense_categories
-    WHERE bank_id = p_bank_id AND name = 'Loan' LIMIT 1;
-  IF v_category_id IS NULL THEN
-    INSERT INTO public.expense_categories (bank_id, name)
-    VALUES (p_bank_id, 'Loan') RETURNING id INTO v_category_id;
-  END IF;
+  -- Ensure "Loan" expense category exists
+  INSERT INTO public.expense_categories (bank_id, name)
+  SELECT p_bank_id, 'Loan'
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.expense_categories
+    WHERE bank_id = p_bank_id
+      AND name = 'Loan'
+  );
 
   -- Create expense (deducts from source)
   v_expense_id := public.process_expense(
     p_bank_id,
     p_amount,
-    v_category_id,
+    (
+      SELECT id
+      FROM public.expense_categories
+      WHERE bank_id = p_bank_id AND name = 'Loan'
+      ORDER BY created_at ASC
+      LIMIT 1
+    ),
     p_source_type,
     CASE WHEN p_source_type = 'profit_account' THEN p_source_account_id ELSE NULL END,
     CASE WHEN p_source_type = 'mother_account' THEN p_source_account_id ELSE NULL END,
@@ -150,29 +157,62 @@ CREATE OR REPLACE FUNCTION public.process_loan_return(
   p_notes TEXT DEFAULT NULL
 ) RETURNS UUID AS $$
 DECLARE
-  v_loan RECORD;
   v_return_id UUID;
-  v_remaining NUMERIC;
 BEGIN
-  SELECT * INTO v_loan FROM public.loans WHERE id = p_loan_id;
-  IF NOT FOUND THEN RAISE EXCEPTION 'Loan not found'; END IF;
-  IF v_loan.status = 'returned' THEN RAISE EXCEPTION 'Loan already fully returned'; END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.loans WHERE id = p_loan_id) THEN
+    RAISE EXCEPTION 'Loan not found';
+  END IF;
 
-  v_remaining := v_loan.amount - v_loan.returned_amount;
-  IF p_amount > v_remaining THEN RAISE EXCEPTION 'Return amount exceeds remaining balance'; END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND status = 'returned'
+  ) THEN
+    RAISE EXCEPTION 'Loan already fully returned';
+  END IF;
+
+  IF p_amount > (
+    SELECT (amount - returned_amount)
+    FROM public.loans
+    WHERE id = p_loan_id
+  ) THEN
+    RAISE EXCEPTION 'Return amount exceeds remaining balance';
+  END IF;
 
   -- Credit back to source account
-  IF v_loan.source_type = 'hand_cash' THEN
-    UPDATE public.hand_cash_accounts SET balance = balance + p_amount WHERE bank_id = v_loan.bank_id;
-  ELSIF v_loan.source_type = 'mother_account' AND v_loan.source_account_id IS NOT NULL THEN
-    UPDATE public.mother_accounts SET balance = balance + p_amount WHERE id = v_loan.source_account_id;
-  ELSIF v_loan.source_type = 'profit_account' AND v_loan.source_account_id IS NOT NULL THEN
-    UPDATE public.profit_accounts SET balance = balance + p_amount WHERE id = v_loan.source_account_id;
-  END IF;
+  UPDATE public.hand_cash_accounts
+  SET balance = balance + p_amount
+  WHERE bank_id = (
+    SELECT bank_id
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND source_type = 'hand_cash'
+  );
+
+  UPDATE public.mother_accounts
+  SET balance = balance + p_amount
+  WHERE id = (
+    SELECT source_account_id
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND source_type = 'mother_account'
+      AND source_account_id IS NOT NULL
+  );
+
+  UPDATE public.profit_accounts
+  SET balance = balance + p_amount
+  WHERE id = (
+    SELECT source_account_id
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND source_type = 'profit_account'
+      AND source_account_id IS NOT NULL
+  );
 
   -- Record the return
   INSERT INTO public.loan_returns (loan_id, bank_id, amount, returned_by, notes)
-  VALUES (p_loan_id, v_loan.bank_id, p_amount, auth.uid(), p_notes)
+  VALUES (p_loan_id, (SELECT bank_id FROM public.loans WHERE id = p_loan_id), p_amount, auth.uid(), p_notes)
   RETURNING id INTO v_return_id;
 
   -- Update loan

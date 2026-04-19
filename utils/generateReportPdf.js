@@ -204,6 +204,7 @@ export function generateReportPdf({
         : '-';
       return [
         fmtDate(txn.created_at),
+        txn.trn_id || '-',
         (txn.type || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase()),
         txn.customer_name || '-',
         txn.customer_account || '-',
@@ -225,18 +226,19 @@ export function generateReportPdf({
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Date', 'Type', 'Customer', 'Account No.', 'Mother A/C', 'Fund Into', 'Source', 'Credit', 'Debit']],
+      head: [['Date', 'TRN ID', 'Type', 'Customer', 'Account No.', 'Mother A/C', 'Fund Into', 'Source', 'Credit', 'Debit']],
       body: txnRows,
       styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize' },
       headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 6.5 },
       columnStyles: {
         0: { cellWidth: 28 },
-        1: { cellWidth: 15 },
-        3: { cellWidth: 'auto' },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 18 },
-        7: { halign: 'right', cellWidth: 20 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 15 },
+        4: { cellWidth: 'auto' },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 18 },
         8: { halign: 'right', cellWidth: 20 },
+        9: { halign: 'right', cellWidth: 20 },
       },
       theme: 'plain',
     });
@@ -255,6 +257,7 @@ export function generateReportPdf({
 
     const expRows = reportData.expenses.map((exp) => [
       fmtDate(exp.created_at),
+      exp.trn_id || '-',
       exp.expense_categories?.name || '-',
       exp.description || '-',
       (exp.deduct_from || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase()),
@@ -264,20 +267,20 @@ export function generateReportPdf({
 
     // Add total expense row
     expRows.push([
-      { content: 'Total Expense', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: 'Total Expense', colSpan: 6, styles: { halign: 'right', fontStyle: 'bold' } },
       { content: fmtCur(reportData.totalExpenses || 0, sym), styles: { halign: 'right', fontStyle: 'bold' } },
     ]);
 
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Date', 'Category', 'Description', 'Deducted From', 'Account', 'Amount']],
+      head: [['Date', 'TRN ID', 'Category', 'Description', 'Deducted From', 'Account', 'Amount']],
       body: expRows,
       styles: { fontSize: 7.5, cellPadding: 2, overflow: 'ellipsize' },
       headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
       columnStyles: {
         0: { cellWidth: 28 },
-        5: { halign: 'right', cellWidth: 26 },
+        6: { halign: 'right', cellWidth: 26 },
       },
       theme: 'plain',
     });

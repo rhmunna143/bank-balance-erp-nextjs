@@ -11,6 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { numberToWords } from '@/utils/numberToWords';
 
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmit, loading = false, currencySymbol = '৳' }) {
   const {
     register,
@@ -25,12 +29,14 @@ export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmi
       customer_name: '',
       customer_phone: '',
       customer_account_no: '',
+      trn_id: '',
       amount: '',
       mother_account_id: '',
       shortage_enabled: false,
       shortage_mother_account_id: '',
       shortage_deduction_amount: '',
       description: '',
+      created_at: getToday(),
     },
   });
 
@@ -62,6 +68,16 @@ export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmi
         <div className="space-y-2">
           <Label>Customer Account No</Label>
           <Input {...register('customer_account_no')} placeholder="Account number" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>TRN ID</Label>
+          <Input {...register('trn_id')} placeholder="Optional transaction id" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Transaction Date</Label>
+          <Input type="date" {...register('created_at')} />
         </div>
 
         <div className="space-y-2">

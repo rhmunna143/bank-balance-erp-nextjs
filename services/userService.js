@@ -76,4 +76,18 @@ export const userService = {
     if (error) throw error;
     return data;
   },
+
+  async resetMemberPassword(targetUserId, newPassword) {
+    const response = await fetch('/api/admin/reset-user-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetUserId, newPassword }),
+    });
+
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload?.error || 'Failed to reset password');
+    }
+    return payload;
+  },
 };

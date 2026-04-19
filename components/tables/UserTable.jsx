@@ -4,9 +4,9 @@ import { formatDate } from '@/utils/dateHelpers';
 import { Button } from '@/components/ui/Button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select';
 import { ROLES } from '@/utils/constants';
-import { Trash2, Shield, User } from 'lucide-react';
+import { Trash2, Shield, User, KeyRound } from 'lucide-react';
 
-export function UserTable({ members, users, currentUserId, onRemove, onRoleChange }) {
+export function UserTable({ members, users, currentUserId, onRemove, onRoleChange, onResetPassword }) {
   const data = members || users || [];
   if (data.length === 0) {
     return (
@@ -90,14 +90,24 @@ export function UserTable({ members, users, currentUserId, onRemove, onRoleChang
                 </td>
                 <td className="py-3 px-4 text-right">
                   {!isCurrentUser && !isOwner && isCurrentAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onRemove?.(member.id)}
-                      className="text-danger hover:text-danger"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="inline-flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onResetPassword?.(member)}
+                        title="Reset password"
+                      >
+                        <KeyRound className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemove?.(member.id)}
+                        className="text-danger hover:text-danger"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   )}
                 </td>
               </tr>

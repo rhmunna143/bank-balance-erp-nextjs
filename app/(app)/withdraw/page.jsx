@@ -74,22 +74,26 @@ export default function WithdrawPage() {
           bank_id: bank.id,
           customer_name: data.customer_name,
           customer_account: data.customer_account_no || null,
+          trn_id: data.trn_id || null,
           amount: data.amount,
           commission: 0,
           mother_account_id:
             data.shortage_mother_account_id || data.mother_account_id,
           shortage_amount: deductionAmount,
           notes: data.description || null,
+          created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
         });
       } else {
         await transactionService.processWithdrawal({
           bank_id: bank.id,
           customer_name: data.customer_name,
           customer_account: data.customer_account_no || null,
+          trn_id: data.trn_id || null,
           amount: data.amount,
           commission: 0,
           mother_account_id: data.mother_account_id,
           notes: data.description || null,
+          created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
         });
       }
       toast.success("Withdrawal recorded successfully!");

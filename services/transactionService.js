@@ -6,11 +6,13 @@ export const transactionService = {
       p_bank_id: params.bank_id,
       p_customer_name: params.customer_name,
       p_customer_account: params.customer_account || null,
+      p_trn_id: params.trn_id || null,
       p_amount: params.amount,
       p_commission: params.commission || 0,
       p_mother_account_id: params.mother_account_id,
       p_reference: params.reference || null,
       p_notes: params.notes || null,
+      p_created_at: params.created_at || null,
     });
     if (error) throw error;
     return data;
@@ -21,11 +23,13 @@ export const transactionService = {
       p_bank_id: params.bank_id,
       p_customer_name: params.customer_name,
       p_customer_account: params.customer_account || null,
+      p_trn_id: params.trn_id || null,
       p_amount: params.amount,
       p_commission: params.commission || 0,
       p_mother_account_id: params.mother_account_id,
       p_reference: params.reference || null,
       p_notes: params.notes || null,
+      p_created_at: params.created_at || null,
     });
     if (error) throw error;
     return data;
@@ -36,12 +40,14 @@ export const transactionService = {
       p_bank_id: params.bank_id,
       p_customer_name: params.customer_name,
       p_customer_account: params.customer_account || null,
+      p_trn_id: params.trn_id || null,
       p_amount: params.amount,
       p_commission: params.commission || 0,
       p_mother_account_id: params.mother_account_id,
       p_shortage_amount: params.shortage_amount || 0,
       p_reference: params.reference || null,
       p_notes: params.notes || null,
+      p_created_at: params.created_at || null,
     });
     if (error) throw error;
     return data;
@@ -50,12 +56,14 @@ export const transactionService = {
   async processCashIn(params) {
     const { data, error } = await supabase.rpc('process_cash_in', {
       p_bank_id: params.bank_id,
+      p_trn_id: params.trn_id || null,
       p_amount: params.amount,
       p_target_type: params.target_type,
       p_target_id: params.target_id || null,
       p_source: params.source || null,
       p_reference: params.reference || null,
       p_notes: params.notes || null,
+      p_created_at: params.created_at || null,
     });
     if (error) throw error;
     return data;
@@ -64,6 +72,7 @@ export const transactionService = {
   async processExpense(params) {
     const { data, error } = await supabase.rpc('process_expense', {
       p_bank_id: params.bank_id,
+      p_trn_id: params.trn_id || null,
       p_amount: params.amount,
       p_category_id: params.category_id,
       p_deduct_from: params.deduct_from,
@@ -71,6 +80,35 @@ export const transactionService = {
       p_mother_account_id: params.mother_account_id || null,
       p_description: params.description || null,
       p_receipt_url: params.receipt_url || null,
+      p_created_at: params.created_at || null,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  async processFundTransfer(params) {
+    const { data, error } = await supabase.rpc('process_fund_transfer', {
+      p_bank_id: params.bank_id,
+      p_trn_id: params.trn_id || null,
+      p_amount: params.amount,
+      p_source_type: params.source_type,
+      p_source_account_id: params.source_account_id || null,
+      p_destination_type: params.destination_type,
+      p_destination_account_id: params.destination_account_id || null,
+      p_destination_name: params.destination_name || null,
+      p_destination_account: params.destination_account || null,
+      p_notes: params.notes || null,
+      p_created_at: params.created_at || null,
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  async reverseTransaction(params) {
+    const { data, error } = await supabase.rpc('reverse_transaction', {
+      p_txn_id: params.txn_id,
+      p_reason: params.reason || null,
+      p_reversed_trn_id: params.reversed_trn_id || null,
     });
     if (error) throw error;
     return data;
@@ -99,7 +137,10 @@ export const transactionService = {
       query = query.eq('performed_by', filters.performedBy);
     }
     if (filters.search) {
-      query = query.or(`customer_name.ilike.%${filters.search}%,customer_account.ilike.%${filters.search}%,notes.ilike.%${filters.search}%`);
+      query = query.or(`trn_id.ilike.%${filters.search}%,customer_name.ilike.%${filters.search}%,customer_account.ilike.%${filters.search}%,destination_name.ilike.%${filters.search}%,destination_account.ilike.%${filters.search}%,notes.ilike.%${filters.search}%`);
+    }
+    if (filters.excludeReversed) {
+      query = query.eq('is_reversed', false);
     }
     if (filters.limit) {
       query = query.limit(filters.limit);
@@ -110,6 +151,30 @@ export const transactionService = {
 
     const { data, error, count } = await query;
     if (error) throw error;
+
+    if (data?.length) {
+      const userIds = [
+        ...new Set(
+          data
+            .flatMap((txn) => [txn.performed_by, txn.reversed_by])
+            .filter(Boolean)
+        ),
+      ];
+
+      if (userIds.length) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+        const profileMap = Object.fromEntries((profiles || []).map((p) => [p.id, p]));
+
+        for (const txn of data) {
+          txn.performer_profile = profileMap[txn.performed_by] || txn.performer || null;
+          txn.reversed_by_profile = profileMap[txn.reversed_by] || null;
+        }
+      }
+    }
+
     return { data, count };
   },
 
@@ -178,6 +243,7 @@ export const transactionService = {
       p_amount: updates.amount != null ? parseFloat(updates.amount) : null,
       p_notes: updates.notes || null,
       p_source: updates.source || null,
+      p_trn_id: updates.trn_id || null,
     });
     if (error) throw error;
     return data;

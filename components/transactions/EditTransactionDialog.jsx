@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
  * @param {Function} props.onSaved     - Called after successful save
  */
 export function EditTransactionDialog({ open, onOpenChange, transaction, onSaved }) {
-  const [form, setForm] = useState({ customer_name: '', customer_account: '', amount: '', notes: '', source: '' });
+  const [form, setForm] = useState({ customer_name: '', customer_account: '', trn_id: '', amount: '', notes: '', source: '' });
   const [saving, setSaving] = useState(false);
 
   const isCashIn = transaction?.type === 'cash_in';
@@ -37,6 +37,7 @@ export function EditTransactionDialog({ open, onOpenChange, transaction, onSaved
       setForm({
         customer_name: transaction.customer_name || '',
         customer_account: transaction.customer_account || '',
+        trn_id: transaction.trn_id || '',
         amount: transaction.amount || '',
         notes: transaction.notes || '',
         source: transaction.source || '',
@@ -56,6 +57,7 @@ export function EditTransactionDialog({ open, onOpenChange, transaction, onSaved
       await transactionService.updateTransaction(transaction.id, {
         customer_name: form.customer_name || null,
         customer_account: form.customer_account || null,
+        trn_id: form.trn_id || null,
         amount: amt,
         notes: form.notes || null,
         source: form.source || null,
@@ -131,6 +133,14 @@ export function EditTransactionDialog({ open, onOpenChange, transaction, onSaved
               value={form.amount}
               onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
               placeholder="Amount"
+            />
+          </div>
+          <div>
+            <Label>TRN ID</Label>
+            <Input
+              value={form.trn_id}
+              onChange={(e) => setForm((f) => ({ ...f, trn_id: e.target.value }))}
+              placeholder="Optional transaction id"
             />
           </div>
           <div>

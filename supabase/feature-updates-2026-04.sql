@@ -28,7 +28,17 @@ ALTER TABLE public.loans
   ADD COLUMN IF NOT EXISTS trn_id TEXT;
 
 ALTER TABLE public.loan_returns
-  ADD COLUMN IF NOT EXISTS trn_id TEXT;
+  ADD COLUMN IF NOT EXISTS trn_id TEXT,
+  ADD COLUMN IF NOT EXISTS destination_type TEXT,
+  ADD COLUMN IF NOT EXISTS destination_account_id UUID;
+
+ALTER TABLE public.loan_returns DROP CONSTRAINT IF EXISTS loan_returns_destination_type_check;
+ALTER TABLE public.loan_returns
+  ADD CONSTRAINT loan_returns_destination_type_check
+  CHECK (
+    destination_type IS NULL
+    OR destination_type IN ('hand_cash', 'mother_account', 'profit_account')
+  );
 
 -- Extend transaction type check for fund transfer
 ALTER TABLE public.transactions DROP CONSTRAINT IF EXISTS transactions_type_check;
@@ -41,6 +51,16 @@ CREATE INDEX IF NOT EXISTS idx_transactions_reversed ON public.transactions(is_r
 CREATE INDEX IF NOT EXISTS idx_expenses_trn_id ON public.expenses(trn_id);
 CREATE INDEX IF NOT EXISTS idx_loans_trn_id ON public.loans(trn_id);
 CREATE INDEX IF NOT EXISTS idx_loan_returns_trn_id ON public.loan_returns(trn_id);
+
+-- Ensure deleting an expense does not violate loans.expense_id FK
+ALTER TABLE public.loans
+  DROP CONSTRAINT IF EXISTS loans_expense_id_fkey;
+
+ALTER TABLE public.loans
+  ADD CONSTRAINT loans_expense_id_fkey
+  FOREIGN KEY (expense_id)
+  REFERENCES public.expenses(id)
+  ON DELETE SET NULL;
 
 -- 2) RPC updates with optional trn_id + created_at
 
@@ -335,6 +355,8 @@ CREATE OR REPLACE FUNCTION public.process_loan_return(
   p_loan_id UUID,
   p_trn_id TEXT,
   p_amount NUMERIC,
+  p_destination_type TEXT DEFAULT NULL,
+  p_destination_account_id UUID DEFAULT NULL,
   p_notes TEXT DEFAULT NULL,
   p_created_at TIMESTAMPTZ DEFAULT NULL
 ) RETURNS UUID AS $$
@@ -362,41 +384,88 @@ BEGIN
     RAISE EXCEPTION 'Return amount exceeds remaining balance';
   END IF;
 
+  IF COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id))
+     NOT IN ('hand_cash', 'mother_account', 'profit_account') THEN
+    RAISE EXCEPTION 'Invalid destination type';
+  END IF;
+
+  IF COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id)) = 'mother_account'
+     AND COALESCE(
+       p_destination_account_id,
+       (
+         SELECT source_account_id
+         FROM public.loans
+         WHERE id = p_loan_id AND source_type = 'mother_account'
+       )
+     ) IS NULL THEN
+    RAISE EXCEPTION 'Destination mother account is required';
+  END IF;
+
+  IF COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id)) = 'profit_account'
+     AND COALESCE(
+       p_destination_account_id,
+       (
+         SELECT source_account_id
+         FROM public.loans
+         WHERE id = p_loan_id AND source_type = 'profit_account'
+       )
+     ) IS NULL THEN
+    RAISE EXCEPTION 'Destination profit account is required';
+  END IF;
+
   UPDATE public.hand_cash_accounts
   SET balance = balance + p_amount
   WHERE bank_id = (
     SELECT bank_id
     FROM public.loans
     WHERE id = p_loan_id
-      AND source_type = 'hand_cash'
+      AND COALESCE(p_destination_type, source_type) = 'hand_cash'
   );
 
   UPDATE public.mother_accounts
   SET balance = balance + p_amount
   WHERE id = (
-    SELECT source_account_id
+    SELECT COALESCE(
+      p_destination_account_id,
+      source_account_id
+    )
     FROM public.loans
     WHERE id = p_loan_id
-      AND source_type = 'mother_account'
-      AND source_account_id IS NOT NULL
+      AND COALESCE(p_destination_type, source_type) = 'mother_account'
   );
 
   UPDATE public.profit_accounts
   SET balance = balance + p_amount
   WHERE id = (
-    SELECT source_account_id
+    SELECT COALESCE(
+      p_destination_account_id,
+      source_account_id
+    )
     FROM public.loans
     WHERE id = p_loan_id
-      AND source_type = 'profit_account'
-      AND source_account_id IS NOT NULL
+      AND COALESCE(p_destination_type, source_type) = 'profit_account'
   );
 
-  INSERT INTO public.loan_returns (loan_id, bank_id, trn_id, amount, returned_by, notes, created_at)
+  INSERT INTO public.loan_returns (
+    loan_id, bank_id, trn_id, amount,
+    destination_type, destination_account_id,
+    returned_by, notes, created_at
+  )
   VALUES (
     p_loan_id,
     (SELECT bank_id FROM public.loans WHERE id = p_loan_id),
     p_trn_id,
     p_amount,
+    COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id)),
+    COALESCE(
+      p_destination_account_id,
+      (
+        SELECT source_account_id
+        FROM public.loans
+        WHERE id = p_loan_id
+          AND source_type IN ('mother_account', 'profit_account')
+      )
+    ),
     auth.uid(),
     p_notes,
     COALESCE(p_created_at, NOW())
@@ -420,10 +489,21 @@ BEGIN
       AND returned_amount >= amount
       AND expense_id IS NOT NULL
   ) THEN
+    WITH linked_expense AS (
+      SELECT expense_id AS id
+      FROM public.loans
+      WHERE id = p_loan_id
+        AND returned_amount >= amount
+        AND expense_id IS NOT NULL
+    ), detach AS (
+      UPDATE public.loans
+      SET expense_id = NULL
+      WHERE id = p_loan_id
+        AND EXISTS (SELECT 1 FROM linked_expense)
+      RETURNING 1
+    )
     DELETE FROM public.expenses
-    WHERE id = (SELECT expense_id FROM public.loans WHERE id = p_loan_id);
-
-    UPDATE public.loans SET expense_id = NULL WHERE id = p_loan_id;
+    WHERE id IN (SELECT id FROM linked_expense);
   END IF;
 
   RETURN v_return_id;

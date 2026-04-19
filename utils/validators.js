@@ -116,6 +116,10 @@ export const loanIssueSchema = z.object({
 export const loanReturnSchema = z.object({
   trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
+  destination_type: z.enum(['hand_cash', 'mother_account', 'profit_account'], {
+    required_error: 'Please select return destination',
+  }),
+  destination_account_id: z.string().optional(),
   notes: z.string().optional(),
   created_at: z.string().optional(),
 });

@@ -24,6 +24,8 @@ export const loanService = {
       p_loan_id: params.loan_id,
       p_trn_id: params.trn_id || null,
       p_amount: parseFloat(params.amount),
+      p_destination_type: params.destination_type || null,
+      p_destination_account_id: params.destination_account_id || null,
       p_notes: params.notes || null,
       p_created_at: params.created_at || null,
     });
@@ -107,6 +109,57 @@ export const loanService = {
     }
 
     return data;
+  },
+
+  async getReturnsByDateRange(bankId, startDate, endDate) {
+    const { data, error } = await supabase
+      .from('loan_returns')
+      .select('*')
+      .eq('bank_id', bankId)
+      .gte('created_at', startDate)
+      .lte('created_at', endDate)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+
+    if (data?.length) {
+      const motherIds = [...new Set(data.filter((r) => r.destination_type === 'mother_account' && r.destination_account_id).map((r) => r.destination_account_id))];
+      const profitIds = [...new Set(data.filter((r) => r.destination_type === 'profit_account' && r.destination_account_id).map((r) => r.destination_account_id))];
+
+      let motherMap = {};
+      let profitMap = {};
+
+      if (motherIds.length) {
+        const { data: mothers } = await supabase
+          .from('mother_accounts')
+          .select('id, name, account_number')
+          .in('id', motherIds);
+        motherMap = Object.fromEntries((mothers || []).map((m) => [m.id, m]));
+      }
+
+      if (profitIds.length) {
+        const { data: profits } = await supabase
+          .from('profit_accounts')
+          .select('id, name')
+          .in('id', profitIds);
+        profitMap = Object.fromEntries((profits || []).map((p) => [p.id, p]));
+      }
+
+      for (const ret of data) {
+        if (ret.destination_type === 'hand_cash') {
+          ret.destination_label = 'Hand Cash';
+        } else if (ret.destination_type === 'mother_account') {
+          const ma = motherMap[ret.destination_account_id];
+          ret.destination_label = ma ? `${ma.name}${ma.account_number ? ` (${ma.account_number})` : ''}` : 'Mother Account';
+        } else if (ret.destination_type === 'profit_account') {
+          const pa = profitMap[ret.destination_account_id];
+          ret.destination_label = pa?.name || 'Profit Account';
+        } else {
+          ret.destination_label = '-';
+        }
+      }
+    }
+
+    return data || [];
   },
 
   async getById(loanId) {

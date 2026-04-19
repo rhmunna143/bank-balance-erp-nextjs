@@ -131,6 +131,9 @@ export default function LoansPage() {
         loan_id: data.loan_id,
         trn_id: data.trn_id || null,
         amount: data.amount,
+        destination_type: data.destination_type,
+        destination_account_id:
+          data.destination_type === "hand_cash" ? null : data.destination_account_id || null,
         notes: data.notes || null,
         created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
       });
@@ -315,7 +318,7 @@ export default function LoansPage() {
 
       {/* Return Loan Dialog */}
       <Dialog open={returnOpen} onOpenChange={(open) => { setReturnOpen(open); if (!open) setSelectedLoan(null); }}>
-        <DialogContent>
+        <DialogContent className="w-[95vw] sm:max-w-2xl lg:max-w-3xl max-h-[88vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Return Loan</DialogTitle>
             <DialogDescription>
@@ -325,6 +328,8 @@ export default function LoansPage() {
           {selectedLoan && (
             <LoanReturnForm
               loan={selectedLoan}
+              motherAccounts={(motherAccounts || []).filter((a) => a.is_active)}
+              profitAccounts={profitAccounts || []}
               onSubmit={handleReturnLoan}
               loading={submitting}
             />
@@ -386,6 +391,8 @@ export default function LoansPage() {
                         <p>Amount: {ret.amount}</p>
                         <p>Date: {new Date(ret.created_at).toLocaleString()}</p>
                         <p>TRN: {ret.trn_id || "-"}</p>
+                        <p>Destination: {ret.destination_type || "-"}</p>
+                        {ret.destination_account_id && <p>Destination Account: {ret.destination_account_id}</p>}
                       </div>
                     ))}
                   </div>

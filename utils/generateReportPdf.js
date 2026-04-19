@@ -287,6 +287,45 @@ export function generateReportPdf({
     y = doc.lastAutoTable.finalY + 6;
   }
 
+  // ── Loan Return Details ──
+  if (showTransactions && reportData.loanReturns?.length > 0) {
+    if (y > 240) { doc.addPage(); y = 14; }
+
+    doc.setFontSize(12);
+    doc.setTextColor(...COLORS.darkText);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Loan Return Details', margin, y);
+    y += 2;
+
+    const loanReturnRows = reportData.loanReturns.map((ret) => [
+      fmtDate(ret.created_at),
+      ret.trn_id || '-',
+      ret.destination_label || ret.destination_type || '-',
+      ret.notes || '-',
+      fmtCur(ret.amount, sym),
+    ]);
+
+    loanReturnRows.push([
+      { content: 'Total Loan Returns', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: fmtCur(reportData.totalLoanReturns || 0, sym), styles: { halign: 'right', fontStyle: 'bold' } },
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [['Date', 'TRN ID', 'Destination', 'Notes', 'Amount']],
+      body: loanReturnRows,
+      styles: { fontSize: 7.5, cellPadding: 2, overflow: 'ellipsize' },
+      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        4: { halign: 'right', cellWidth: 30 },
+      },
+      theme: 'plain',
+    });
+    y = doc.lastAutoTable.finalY + 6;
+  }
+
   // ── Signature Section ──
   // Ensure enough space; if not, add a new page
   if (y > pageH - 50) {

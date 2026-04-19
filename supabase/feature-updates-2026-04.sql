@@ -136,6 +136,7 @@ BEGIN
   RETURNING id INTO v_txn_id;
 
   UPDATE public.hand_cash_accounts SET balance = balance - p_amount WHERE bank_id = p_bank_id;
+  UPDATE public.mother_accounts SET balance = balance + p_amount WHERE id = p_mother_account_id;
 
   IF p_commission > 0 THEN
     UPDATE public.profit_accounts

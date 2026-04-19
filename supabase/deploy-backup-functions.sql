@@ -217,6 +217,8 @@ CREATE OR REPLACE FUNCTION public.reset_bank_data(
 ) RETURNS BOOLEAN AS $$
 BEGIN
   DELETE FROM public.daily_logs WHERE bank_id = p_bank_id;
+  DELETE FROM public.loan_returns WHERE bank_id = p_bank_id;
+  DELETE FROM public.loans WHERE bank_id = p_bank_id;
   DELETE FROM public.expenses WHERE bank_id = p_bank_id;
   DELETE FROM public.transactions WHERE bank_id = p_bank_id;
   UPDATE public.hand_cash_accounts SET balance = 0 WHERE bank_id = p_bank_id;

@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { numberToWords } from "@/utils/numberToWords";
 
 function getToday() {
   return new Date().toISOString().slice(0, 10);
@@ -49,6 +50,7 @@ export function FundTransferForm({
 
   const sourceType = watch("source_type");
   const destinationType = watch("destination_type");
+  const amountWords = numberToWords(watch("amount"));
 
   const getOptions = (type) => {
     if (type === "mother_account") {
@@ -177,6 +179,9 @@ export function FundTransferForm({
         <div className="space-y-2">
           <Label>Amount *</Label>
           <Input type="number" step="0.01" {...register("amount", { valueAsNumber: true })} placeholder="0.00" />
+          {amountWords && (
+            <p className="text-xs text-[var(--color-primary)] italic">{amountWords}</p>
+          )}
           {errors.amount && <p className="text-xs text-danger">{errors.amount.message}</p>}
         </div>
 

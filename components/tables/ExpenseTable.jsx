@@ -4,9 +4,9 @@ import { formatDateTime } from '@/utils/dateHelpers';
 import { formatCurrency } from '@/utils/currency';
 import { useBank } from '@/hooks/useBank';
 import { Button } from '@/components/ui/Button';
-import { Pencil } from 'lucide-react';
+import { Pencil, RotateCcw } from 'lucide-react';
 
-export function ExpenseTable({ expenses = [], onEdit }) {
+export function ExpenseTable({ expenses = [], onEdit, onReverse }) {
   const { currencySymbol } = useBank();
 
   if (expenses.length === 0) {
@@ -41,6 +41,20 @@ export function ExpenseTable({ expenses = [], onEdit }) {
               </td>
               <td className="py-3 px-4 text-[var(--color-text-muted)]">
                 {expense.description || '-'}
+                {expense.is_reversed && (
+                  <div className="mt-1 space-y-0.5">
+                    <p className="text-[11px] text-danger font-medium">Reversed</p>
+                    <p className="text-[11px] text-[var(--color-text-muted)]">
+                      By: {expense.reversed_by_profile?.full_name || expense.reversed_by_profile?.email || 'Unknown'}
+                    </p>
+                    {expense.reversed_at && (
+                      <p className="text-[11px] text-[var(--color-text-muted)]">On: {formatDateTime(expense.reversed_at)}</p>
+                    )}
+                    {expense.reversal_reason && (
+                      <p className="text-[11px] text-[var(--color-text-muted)]">Reason: {expense.reversal_reason}</p>
+                    )}
+                  </div>
+                )}
               </td>
               <td className="py-3 px-4 text-right font-medium text-danger">
                 -{formatCurrency(expense.amount, currencySymbol)}
@@ -49,14 +63,31 @@ export function ExpenseTable({ expenses = [], onEdit }) {
                 {expense.deduct_from?.replace('_', ' ') || '-'}
               </td>
               <td className="py-3 px-4 text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit?.(expense)}
-                  title="Edit expense"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="inline-flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onEdit?.(expense)}
+                    title="Edit expense"
+                    disabled={!!expense.is_reversed}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  {onReverse && (
+                    expense.is_reversed ? (
+                      <span className="text-xs text-danger font-medium px-2">Reversed</span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onReverse(expense)}
+                        title="Reverse expense"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5 mr-1" /> Reverse
+                      </Button>
+                    )
+                  )}
+                </div>
               </td>
             </tr>
           ))}

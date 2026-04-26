@@ -137,6 +137,26 @@ export default function ExpensesPage() {
     triggerRefresh();
   };
 
+  const handleReverseExpense = async (expense) => {
+    const reason = window.prompt("Reverse reason");
+    if (reason === null) return;
+
+    try {
+      await expenseService.reverseExpense({
+        expense_id: expense.id,
+        reason: reason || null,
+      });
+      toast.success("Expense reversed");
+      fetchExpenses();
+      refreshHC();
+      refreshMA();
+      refreshPA();
+      triggerRefresh();
+    } catch (error) {
+      toast.error(error.message || "Failed to reverse expense");
+    }
+  };
+
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   return (
@@ -240,6 +260,7 @@ export default function ExpensesPage() {
                 expenses={expenses}
                 currencySymbol={currencySymbol}
                 onEdit={handleEditClick}
+                onReverse={handleReverseExpense}
               />
 
               {totalPages > 1 && (

@@ -20,12 +20,20 @@ import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import { DateRangePicker } from "@/components/common/DateRangePicker";
+import { FundTransferForm } from "@/components/forms/FundTransferForm";
 import { transactionService } from "@/services/transactionService";
 import { useTransactionStore } from "@/stores/transactionStore";
 import { formatCurrency } from "@/utils/currency";
 import { TRANSACTION_TYPES, ITEMS_PER_PAGE } from "@/utils/constants";
-import { List, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { List, Search, ChevronLeft, ChevronRight, ArrowRightLeft } from "lucide-react";
 import toast from "react-hot-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
 
 function getTodayRange() {
   const today = new Date();
@@ -38,9 +46,9 @@ function getTodayRange() {
 
 export default function TransactionHistoryPage() {
   const { bank, currencySymbol } = useBank();
-  const { refresh: refreshMA } = useMotherAccounts();
+  const { accounts: motherAccounts, refresh: refreshMA } = useMotherAccounts();
+  const { accounts: profitAccounts, refresh: refreshPA } = useProfitAccounts();
   const { refresh: refreshHC } = useHandCash();
-  const { refresh: refreshPA } = useProfitAccounts();
   const { refreshKey, triggerRefresh } = useTransactionStore();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +68,8 @@ export default function TransactionHistoryPage() {
   // Edit transaction state
   const [editOpen, setEditOpen] = useState(false);
   const [editingTxn, setEditingTxn] = useState(null);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transfering, setTransfering] = useState(false);
 
   const fetchTransactions = useCallback(async () => {
     if (!bank?.id) return;
@@ -141,7 +151,7 @@ export default function TransactionHistoryPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[var(--color-text-muted)]" />
               <Input
-                placeholder="Search customer..."
+                placeholder="Global search: TRN ID, name, account no, notes"
                 className="pl-9"
                 value={filters.search}
                 onChange={(e) =>
@@ -181,6 +191,10 @@ export default function TransactionHistoryPage() {
             <Button variant="outline" onClick={clearFilters}>
               Clear Filters
             </Button>
+            <Button onClick={() => setTransferOpen(true)}>
+              <ArrowRightLeft className="h-4 w-4 mr-2" />
+              Fund Transfer
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -207,6 +221,24 @@ export default function TransactionHistoryPage() {
                 transactions={transactions}
                 currencySymbol={currencySymbol}
                 onEdit={handleEditClick}
+                onReverse={async (txn) => {
+                  const reason = window.prompt("Reverse reason");
+                  if (reason === null) return;
+                  try {
+                    await transactionService.reverseTransaction({
+                      txn_id: txn.id,
+                      reason: reason || null,
+                    });
+                    toast.success("Transaction reversed");
+                    refreshMA();
+                    refreshHC();
+                    refreshPA();
+                    triggerRefresh();
+                    fetchTransactions();
+                  } catch (error) {
+                    toast.error(error.message || "Failed to reverse transaction");
+                  }
+                }}
               />
 
               {/* Pagination */}
@@ -251,6 +283,54 @@ export default function TransactionHistoryPage() {
         transaction={editingTxn}
         onSaved={handleEditSaved}
       />
+
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Fund Transfer</DialogTitle>
+            <DialogDescription>
+              Transfer funds internally between accounts or to an external account holder.
+            </DialogDescription>
+          </DialogHeader>
+          <FundTransferForm
+            motherAccounts={(motherAccounts || []).filter((a) => a.is_active)}
+            profitAccounts={profitAccounts || []}
+            loading={transfering}
+            onSubmit={async (data) => {
+              setTransfering(true);
+              try {
+                await transactionService.processFundTransfer({
+                  bank_id: bank.id,
+                  trn_id: data.trn_id || null,
+                  amount: data.amount,
+                  source_type: data.source_type,
+                  source_account_id: data.source_type === "hand_cash" ? null : data.source_account_id,
+                  destination_type: data.destination_type,
+                  destination_account_id:
+                    data.destination_type === "hand_cash" || data.destination_type === "external_holder"
+                      ? null
+                      : data.destination_account_id,
+                  destination_name: data.destination_name || null,
+                  destination_account: data.destination_account || null,
+                  notes: data.notes || null,
+                  created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
+                });
+                toast.success("Fund transfer recorded");
+                setTransferOpen(false);
+                refreshMA();
+                refreshHC();
+                refreshPA();
+                triggerRefresh();
+                fetchTransactions();
+              } catch (error) {
+                toast.error(error.message || "Failed to process transfer");
+              } finally {
+                setTransfering(false);
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

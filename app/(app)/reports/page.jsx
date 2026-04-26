@@ -509,6 +509,7 @@ export default function ReportsPage() {
                       <thead>
                         <tr className="border-b border-[var(--color-border)]">
                           <th className="text-left py-2 px-3">Date</th>
+                          <th className="text-left py-2 px-3">TRN ID</th>
                           <th className="text-left py-2 px-3">Type</th>
                           <th className="text-left py-2 px-3">Customer</th>
                           <th className="text-left py-2 px-3">Account No.</th>
@@ -538,6 +539,9 @@ export default function ReportsPage() {
                             >
                               <td className="py-2 px-3 whitespace-nowrap">
                                 {formatDate(txn.created_at)}
+                              </td>
+                              <td className="py-2 px-3 whitespace-nowrap">
+                                {txn.trn_id || "-"}
                               </td>
                               <td className="py-2 px-3 capitalize">
                                 {txn.type?.replace("_", " ")}
@@ -595,7 +599,7 @@ export default function ReportsPage() {
                           );
                           return (
                             <tr className="border-t-2 border-[var(--color-border)] font-bold bg-[var(--color-surface)]">
-                              <td colSpan={7} className="py-2 px-3 text-right">
+                              <td colSpan={8} className="py-2 px-3 text-right">
                                 Total
                               </td>
                               <td className="py-2 px-3 text-right text-success">
@@ -628,6 +632,7 @@ export default function ReportsPage() {
                       <thead>
                         <tr className="border-b border-[var(--color-border)]">
                           <th className="text-left py-2 px-3">Date</th>
+                          <th className="text-left py-2 px-3">TRN ID</th>
                           <th className="text-left py-2 px-3">Category</th>
                           <th className="text-left py-2 px-3">Description</th>
                           <th className="text-left py-2 px-3">
@@ -645,6 +650,9 @@ export default function ReportsPage() {
                           >
                             <td className="py-2 px-3 whitespace-nowrap">
                               {formatDate(exp.created_at)}
+                            </td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              {exp.trn_id || "-"}
                             </td>
                             <td className="py-2 px-3">
                               {exp.expense_categories?.name || "-"}
@@ -669,7 +677,7 @@ export default function ReportsPage() {
                       </tbody>
                       <tfoot>
                         <tr className="border-t-2 border-[var(--color-border)] font-bold bg-[var(--color-surface)]">
-                          <td colSpan={5} className="py-2 px-3 text-right">
+                          <td colSpan={6} className="py-2 px-3 text-right">
                             Total Expense
                           </td>
                           <td className="py-2 px-3 text-right text-danger">
@@ -677,6 +685,53 @@ export default function ReportsPage() {
                               reportData.totalExpenses || 0,
                               currencySymbol
                             )}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+          {/* Loan Return Details */}
+          {showTransactions &&
+            reportData.loanReturns &&
+            reportData.loanReturns.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Loan Return Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[var(--color-border)]">
+                          <th className="text-left py-2 px-3">Date</th>
+                          <th className="text-left py-2 px-3">TRN ID</th>
+                          <th className="text-left py-2 px-3">Destination</th>
+                          <th className="text-left py-2 px-3">Notes</th>
+                          <th className="text-right py-2 px-3">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.loanReturns.map((ret, i) => (
+                          <tr key={ret.id || i} className="border-b border-[var(--color-border)]">
+                            <td className="py-2 px-3 whitespace-nowrap">{formatDate(ret.created_at)}</td>
+                            <td className="py-2 px-3 whitespace-nowrap">{ret.trn_id || "-"}</td>
+                            <td className="py-2 px-3">{ret.destination_label || ret.destination_type || "-"}</td>
+                            <td className="py-2 px-3">{ret.notes || "-"}</td>
+                            <td className="py-2 px-3 text-right text-emerald-600">
+                              {formatCurrency(ret.amount, currencySymbol)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr className="border-t-2 border-[var(--color-border)] font-bold bg-[var(--color-surface)]">
+                          <td colSpan={4} className="py-2 px-3 text-right">Total Loan Returns</td>
+                          <td className="py-2 px-3 text-right text-emerald-600">
+                            {formatCurrency(reportData.totalLoanReturns || 0, currencySymbol)}
                           </td>
                         </tr>
                       </tfoot>

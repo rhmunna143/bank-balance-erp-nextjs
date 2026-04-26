@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { numberToWords } from '@/utils/numberToWords';
 
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function LoanIssueForm({
   members = [],
   motherAccounts = [],
@@ -28,11 +32,13 @@ export function LoanIssueForm({
     resolver: zodResolver(loanIssueSchema),
     defaultValues: {
       borrower_user_id: '',
+      trn_id: '',
       amount: '',
       source_type: '',
       source_account_id: '',
       due_date: '',
       notes: '',
+      created_at: getToday(),
     },
   });
 
@@ -90,6 +96,16 @@ export function LoanIssueForm({
             <p className="text-xs text-[var(--color-primary)] italic">{amountWords}</p>
           )}
           {errors.amount && <p className="text-xs text-danger">{errors.amount.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label>TRN ID</Label>
+          <Input {...register('trn_id')} placeholder="Optional transaction id" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Issue Date</Label>
+          <Input type="date" {...register('created_at')} />
         </div>
 
         <div className="space-y-2">

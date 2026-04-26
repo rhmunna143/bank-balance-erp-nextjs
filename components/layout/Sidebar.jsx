@@ -23,6 +23,8 @@ import {
   Globe,
   Layers,
   Image as ImageIcon,
+  Search,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { useBank } from '@/hooks/useBank';
 import { useAuth } from '@/hooks/useAuth';
@@ -50,7 +52,9 @@ const navItems = [
       { label: 'Cash-In', path: '/cash-in', icon: ArrowDownToLine },
       { label: 'Deposit', path: '/deposit', icon: Wallet },
       { label: 'Withdraw', path: '/withdraw', icon: ArrowUpFromLine },
+      { label: 'Fund Transfer', path: '/fund-transfer', icon: ArrowRightLeft },
       { label: 'History', path: '/transactions', icon: History },
+      { label: 'Global Search', path: '/search', icon: Search },
     ],
   },
   {

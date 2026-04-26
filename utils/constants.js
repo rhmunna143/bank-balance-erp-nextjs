@@ -23,6 +23,7 @@ export const TRANSACTION_TYPES = {
   deposit: 'Deposit',
   withdrawal: 'Withdrawal',
   cash_in: 'Cash In',
+  fund_transfer: 'Fund Transfer',
 };
 
 export const ACCOUNT_TYPES = {
@@ -50,6 +51,8 @@ export const RESERVED_SLUGS = [
   'settings',
   'dashboard',
   'admin',
+  'search',
+  'fund-transfer',
 ];
 
 export const REPORT_PERIODS = {

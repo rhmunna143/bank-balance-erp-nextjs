@@ -196,7 +196,7 @@ export default function BankSettingsPage() {
 
   const handleResetAll = async () => {
     const confirmText = window.prompt(
-      'This will DELETE all transactions, expenses, daily logs and reset all account balances to 0.\n\nType "RESET" to confirm:'
+      'This will DELETE all transactions, expenses, loans, loan return histories, daily logs and reset all account balances to 0.\n\nType "RESET" to confirm:'
     );
     if (confirmText !== "RESET") {
       if (confirmText !== null)
@@ -408,9 +408,10 @@ export default function BankSettingsPage() {
               Reset All Data
             </h4>
             <p className="text-sm text-red-600 dark:text-red-400 mb-3">
-              This will permanently delete all transactions, expenses, and daily
-              logs, and reset all account balances to zero. This action cannot be
-              undone. Consider creating a backup first.
+              This will permanently delete all transactions, expenses, loans,
+              loan return histories, and daily logs, and reset all account
+              balances to zero. This action cannot be undone. Consider creating
+              a backup first.
             </p>
             <Button
               variant="outline"

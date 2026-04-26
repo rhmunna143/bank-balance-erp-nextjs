@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS public.loan_returns (
     loan_id UUID NOT NULL REFERENCES public.loans(id) ON DELETE CASCADE,
     bank_id UUID NOT NULL REFERENCES public.banks(id) ON DELETE CASCADE,
     amount NUMERIC(15, 2) NOT NULL CHECK (amount > 0),
+  destination_type TEXT CHECK (destination_type IN ('hand_cash', 'mother_account', 'profit_account')),
+  destination_account_id UUID,
     returned_by UUID REFERENCES public.profiles(id),
     notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -112,21 +114,28 @@ CREATE OR REPLACE FUNCTION public.process_loan_issue(
 DECLARE
   v_expense_id UUID;
   v_loan_id UUID;
-  v_category_id UUID;
 BEGIN
-  -- Get or create "Loan" expense category
-  SELECT id INTO v_category_id FROM public.expense_categories
-    WHERE bank_id = p_bank_id AND name = 'Loan' LIMIT 1;
-  IF v_category_id IS NULL THEN
-    INSERT INTO public.expense_categories (bank_id, name)
-    VALUES (p_bank_id, 'Loan') RETURNING id INTO v_category_id;
-  END IF;
+  -- Ensure "Loan" expense category exists
+  INSERT INTO public.expense_categories (bank_id, name)
+  SELECT p_bank_id, 'Loan'
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM public.expense_categories
+    WHERE bank_id = p_bank_id
+      AND name = 'Loan'
+  );
 
   -- Create expense (deducts from source)
   v_expense_id := public.process_expense(
     p_bank_id,
     p_amount,
-    v_category_id,
+    (
+      SELECT id
+      FROM public.expense_categories
+      WHERE bank_id = p_bank_id AND name = 'Loan'
+      ORDER BY created_at ASC
+      LIMIT 1
+    ),
     p_source_type,
     CASE WHEN p_source_type = 'profit_account' THEN p_source_account_id ELSE NULL END,
     CASE WHEN p_source_type = 'mother_account' THEN p_source_account_id ELSE NULL END,
@@ -147,32 +156,116 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION public.process_loan_return(
   p_loan_id UUID,
   p_amount NUMERIC,
+  p_destination_type TEXT DEFAULT NULL,
+  p_destination_account_id UUID DEFAULT NULL,
   p_notes TEXT DEFAULT NULL
 ) RETURNS UUID AS $$
 DECLARE
-  v_loan RECORD;
   v_return_id UUID;
-  v_remaining NUMERIC;
 BEGIN
-  SELECT * INTO v_loan FROM public.loans WHERE id = p_loan_id;
-  IF NOT FOUND THEN RAISE EXCEPTION 'Loan not found'; END IF;
-  IF v_loan.status = 'returned' THEN RAISE EXCEPTION 'Loan already fully returned'; END IF;
-
-  v_remaining := v_loan.amount - v_loan.returned_amount;
-  IF p_amount > v_remaining THEN RAISE EXCEPTION 'Return amount exceeds remaining balance'; END IF;
-
-  -- Credit back to source account
-  IF v_loan.source_type = 'hand_cash' THEN
-    UPDATE public.hand_cash_accounts SET balance = balance + p_amount WHERE bank_id = v_loan.bank_id;
-  ELSIF v_loan.source_type = 'mother_account' AND v_loan.source_account_id IS NOT NULL THEN
-    UPDATE public.mother_accounts SET balance = balance + p_amount WHERE id = v_loan.source_account_id;
-  ELSIF v_loan.source_type = 'profit_account' AND v_loan.source_account_id IS NOT NULL THEN
-    UPDATE public.profit_accounts SET balance = balance + p_amount WHERE id = v_loan.source_account_id;
+  IF NOT EXISTS (SELECT 1 FROM public.loans WHERE id = p_loan_id) THEN
+    RAISE EXCEPTION 'Loan not found';
   END IF;
 
+  IF EXISTS (
+    SELECT 1
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND status = 'returned'
+  ) THEN
+    RAISE EXCEPTION 'Loan already fully returned';
+  END IF;
+
+  IF p_amount > (
+    SELECT (amount - returned_amount)
+    FROM public.loans
+    WHERE id = p_loan_id
+  ) THEN
+    RAISE EXCEPTION 'Return amount exceeds remaining balance';
+  END IF;
+
+  IF COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id))
+     NOT IN ('hand_cash', 'mother_account', 'profit_account') THEN
+    RAISE EXCEPTION 'Invalid destination type';
+  END IF;
+
+  IF COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id)) = 'mother_account'
+     AND COALESCE(
+       p_destination_account_id,
+       (
+         SELECT source_account_id
+         FROM public.loans
+         WHERE id = p_loan_id AND source_type = 'mother_account'
+       )
+     ) IS NULL THEN
+    RAISE EXCEPTION 'Destination mother account is required';
+  END IF;
+
+  IF COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id)) = 'profit_account'
+     AND COALESCE(
+       p_destination_account_id,
+       (
+         SELECT source_account_id
+         FROM public.loans
+         WHERE id = p_loan_id AND source_type = 'profit_account'
+       )
+     ) IS NULL THEN
+    RAISE EXCEPTION 'Destination profit account is required';
+  END IF;
+
+  -- Credit back to source account
+  UPDATE public.hand_cash_accounts
+  SET balance = balance + p_amount
+  WHERE bank_id = (
+    SELECT bank_id
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND COALESCE(p_destination_type, source_type) = 'hand_cash'
+  );
+
+  UPDATE public.mother_accounts
+  SET balance = balance + p_amount
+  WHERE id = (
+    SELECT COALESCE(
+      p_destination_account_id,
+      source_account_id
+    )
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND COALESCE(p_destination_type, source_type) = 'mother_account'
+  );
+
+  UPDATE public.profit_accounts
+  SET balance = balance + p_amount
+  WHERE id = (
+    SELECT COALESCE(
+      p_destination_account_id,
+      source_account_id
+    )
+    FROM public.loans
+    WHERE id = p_loan_id
+      AND COALESCE(p_destination_type, source_type) = 'profit_account'
+  );
+
   -- Record the return
-  INSERT INTO public.loan_returns (loan_id, bank_id, amount, returned_by, notes)
-  VALUES (p_loan_id, v_loan.bank_id, p_amount, auth.uid(), p_notes)
+  INSERT INTO public.loan_returns (loan_id, bank_id, amount, destination_type, destination_account_id, returned_by, notes)
+  VALUES (
+    p_loan_id,
+    (SELECT bank_id FROM public.loans WHERE id = p_loan_id),
+    p_amount,
+    COALESCE(p_destination_type, (SELECT source_type FROM public.loans WHERE id = p_loan_id)),
+    COALESCE(
+      p_destination_account_id,
+      (
+        SELECT source_account_id
+        FROM public.loans
+        WHERE id = p_loan_id
+          AND source_type IN ('mother_account', 'profit_account')
+      )
+    ),
+    auth.uid(),
+    p_notes
+  )
   RETURNING id INTO v_return_id;
 
   -- Update loan
@@ -202,3 +295,13 @@ ALTER TABLE
     public.loan_returns DROP CONSTRAINT IF EXISTS loan_returns_returned_by_fkey,
 ADD
     CONSTRAINT loan_returns_returned_by_fkey FOREIGN KEY (returned_by) REFERENCES public.profiles(id);
+
+-- Ensure deleting a linked expense is safe for completed loan cleanup
+ALTER TABLE public.loans
+  DROP CONSTRAINT IF EXISTS loans_expense_id_fkey;
+
+ALTER TABLE public.loans
+  ADD CONSTRAINT loans_expense_id_fkey
+  FOREIGN KEY (expense_id)
+  REFERENCES public.expenses(id)
+  ON DELETE SET NULL;

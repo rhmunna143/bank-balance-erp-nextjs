@@ -12,6 +12,10 @@ import { numberToWords } from '@/utils/numberToWords';
 
 const EXTERNAL_SOURCES = ['Hand Cash', 'Head Office', 'Branch', 'Personal', 'Other'];
 
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashId, handCashBalance = 0, onSubmit, loading = false }) {
   const {
     register,
@@ -25,10 +29,12 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
     defaultValues: {
       target_type: '',
       target_id: '',
+      trn_id: '',
       amount: '',
       source: '',
       reference: '',
       notes: '',
+      created_at: getToday(),
     },
   });
 
@@ -151,6 +157,16 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
         <div className="space-y-2">
           <Label>Reference</Label>
           <Input {...register('reference')} placeholder="Transaction reference" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>TRN ID</Label>
+          <Input {...register('trn_id')} placeholder="Optional transaction id" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Transaction Date</Label>
+          <Input type="date" {...register('created_at')} />
         </div>
 
         <div className="space-y-2 md:col-span-2">

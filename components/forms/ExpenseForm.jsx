@@ -10,6 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Loader2 } from 'lucide-react';
 import { numberToWords } from '@/utils/numberToWords';
 
+function getToday() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function ExpenseForm({
   categories = [],
   motherAccounts = [],
@@ -29,10 +33,12 @@ export function ExpenseForm({
     resolver: zodResolver(expenseSchema),
     defaultValues: {
       category_id: '',
+      trn_id: '',
       amount: '',
       particulars: '',
       deducted_from_type: '',
       deducted_from_id: '',
+      created_at: getToday(),
     },
   });
 
@@ -95,6 +101,16 @@ export function ExpenseForm({
             <p className="text-xs text-[var(--color-primary)] italic">{amountWords}</p>
           )}
           {errors.amount && <p className="text-xs text-danger">{errors.amount.message}</p>}
+        </div>
+
+        <div className="space-y-2">
+          <Label>TRN ID</Label>
+          <Input {...register('trn_id')} placeholder="Optional transaction id" />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Expense Date</Label>
+          <Input type="date" {...register('created_at')} />
         </div>
 
         <div className="space-y-2 md:col-span-2">

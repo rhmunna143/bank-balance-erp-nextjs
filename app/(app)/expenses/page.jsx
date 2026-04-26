@@ -95,6 +95,7 @@ export default function ExpensesPage() {
     try {
       await transactionService.processExpense({
         bank_id: bank.id,
+        trn_id: data.trn_id || null,
         amount: data.amount,
         category_id: data.category_id,
         deduct_from: data.deducted_from_type,
@@ -108,6 +109,7 @@ export default function ExpensesPage() {
             : null,
         description: data.particulars || null,
         receipt_url: null,
+        created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
       });
       toast.success("Expense recorded!");
       fetchExpenses();

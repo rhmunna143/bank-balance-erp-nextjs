@@ -80,12 +80,14 @@ export default function CashInPage() {
     try {
       await transactionService.processCashIn({
         bank_id: bank.id,
+        trn_id: data.trn_id || null,
         amount: data.amount,
         target_type: data.target_type,
         target_id: data.target_type === "hand_cash" ? null : data.target_id,
         source: data.source || null,
         reference: data.reference || null,
         notes: data.notes || null,
+        created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
       });
       toast.success("Cash-in recorded successfully!");
       refreshHC();

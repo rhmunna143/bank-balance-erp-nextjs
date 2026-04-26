@@ -105,7 +105,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Step 0c: Update process_withdrawal — only hand cash decreases (mother account is reference only)
+-- Step 0c: Update process_withdrawal — hand cash decreases and mother account increases
 CREATE OR REPLACE FUNCTION public.process_withdrawal(
   p_bank_id UUID,
   p_customer_name TEXT,
@@ -125,6 +125,7 @@ BEGIN
   RETURNING id INTO v_txn_id;
 
   UPDATE public.hand_cash_accounts SET balance = balance - p_amount WHERE bank_id = p_bank_id;
+  UPDATE public.mother_accounts SET balance = balance + p_amount WHERE id = p_mother_account_id;
 
   IF p_commission > 0 THEN
     SELECT id INTO v_profit_account_id FROM public.profit_accounts WHERE bank_id = p_bank_id LIMIT 1;
@@ -612,6 +613,8 @@ CREATE OR REPLACE FUNCTION public.reset_bank_data(
 ) RETURNS BOOLEAN AS $$
 BEGIN
   DELETE FROM public.daily_logs WHERE bank_id = p_bank_id;
+  DELETE FROM public.loan_returns WHERE bank_id = p_bank_id;
+  DELETE FROM public.loans WHERE bank_id = p_bank_id;
   DELETE FROM public.expenses WHERE bank_id = p_bank_id;
   DELETE FROM public.transactions WHERE bank_id = p_bank_id;
   UPDATE public.hand_cash_accounts SET balance = 0 WHERE bank_id = p_bank_id;

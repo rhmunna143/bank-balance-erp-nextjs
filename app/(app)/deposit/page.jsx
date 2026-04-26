@@ -70,10 +70,12 @@ export default function DepositPage() {
         bank_id: bank.id,
         customer_name: data.customer_name,
         customer_account: data.customer_account_no || null,
+        trn_id: data.trn_id || null,
         amount: data.amount,
         commission: 0,
         mother_account_id: data.mother_account_id,
         notes: data.description || null,
+        created_at: data.created_at ? `${data.created_at}T12:00:00` : null,
       });
       toast.success("Deposit recorded successfully!");
       refreshMA();

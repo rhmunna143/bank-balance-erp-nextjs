@@ -36,6 +36,20 @@ function fmtDate(d) {
   }
 }
 
+function fmtDateOnly(d) {
+  if (!d) return '';
+  try {
+    const dt = new Date(d);
+    if (Number.isNaN(dt.getTime())) return String(d);
+    const day = String(dt.getDate()).padStart(2, '0');
+    const month = String(dt.getMonth() + 1).padStart(2, '0');
+    const year = String(dt.getFullYear());
+    return `${day}/${month}/${year}`;
+  } catch {
+    return String(d);
+  }
+}
+
 /**
  * Generate a PDF report and open it in a new tab.
  */
@@ -53,8 +67,9 @@ export function generateReportPdf({
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const margin = 14;
-  let y = 14;
+  const marginInch = 0.5;
+  const margin = marginInch * 25.4;
+  let y = margin;
 
   // ── Header ──
   doc.setFontSize(18);
@@ -94,7 +109,6 @@ export function generateReportPdf({
   if (showExpenses) {
     cards.push({ label: 'Total Expenses', value: fmtCur(reportData.totalExpenses || 0, sym), sub: `${reportData.expenseCount || 0} items`, color: COLORS.orange });
   }
-  cards.push({ label: 'Hand Cash (System)', value: fmtCur(reportData.handCashBalance || 0, sym), sub: 'ERP Calculated', color: COLORS.primary });
 
   // Add mother account balance cards
   if (reportData.motherAccountBalances && reportData.motherAccountBalances.length > 0) {
@@ -108,79 +122,104 @@ export function generateReportPdf({
   const totalBalance = (reportData.totalMotherBalance || 0) + (reportData.handCashBalance || 0);
   cards.push({ label: 'Total Balance', value: fmtCur(totalBalance, sym), sub: 'Mother + Hand Cash', color: COLORS.primary });
 
-  // Render cards as autoTable rows of 3 per row for proper wrapping
-  const colsPerRow = 3;
-  const cardAreaW = pageW - margin * 2;
-  const gap = 4;
-  const cardW = (cardAreaW - (colsPerRow - 1) * gap) / colsPerRow;
-  const cardH = 22;
-
-  for (let row = 0; row < Math.ceil(cards.length / colsPerRow); row++) {
-    const rowCards = cards.slice(row * colsPerRow, (row + 1) * colsPerRow);
-
-    rowCards.forEach((card, i) => {
-      const x = margin + i * (cardW + gap);
-
-      // Card border
-      doc.setDrawColor(...COLORS.lightBorder);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(x, y, cardW, cardH, 2, 2, 'S');
-
-      // Label
-      doc.setFontSize(7);
-      doc.setTextColor(...COLORS.gray);
-      doc.setFont('helvetica', 'normal');
-      doc.text(card.label, x + 3, y + 5.5);
-
-      // Value — auto-shrink font to fit within card width
-      let fontSize = 12;
-      doc.setFont('helvetica', 'bold');
-      while (fontSize > 6) {
-        doc.setFontSize(fontSize);
-        const tw = doc.getTextWidth(card.value);
-        if (tw <= cardW - 6) break;
-        fontSize -= 0.5;
-      }
-      doc.setTextColor(...card.color);
-      doc.text(card.value, x + 3, y + 13);
-
-      // Sub
-      doc.setFontSize(6.5);
-      doc.setTextColor(...COLORS.gray);
-      doc.setFont('helvetica', 'normal');
-      doc.text(card.sub, x + 3, y + 18.5);
-    });
-
-    y += cardH + 3;
+  const summaryRows = [];
+  for (let i = 0; i < cards.length; i += 2) {
+    const left = cards[i];
+    const right = cards[i + 1];
+    summaryRows.push([
+      left ? `${left.label}\n${left.sub}` : '',
+      left?.value || '',
+      right ? `${right.label}\n${right.sub}` : '',
+      right?.value || '',
+    ]);
   }
-  y += 2;
+
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [['Metric', 'Amount', 'Metric', 'Amount']],
+    body: summaryRows,
+    styles: {
+      fontSize: 8.2,
+      cellPadding: 1.8,
+      overflow: 'ellipsize',
+      lineColor: [140, 140, 140],
+      lineWidth: 0.1,
+      valign: 'middle',
+    },
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      fontSize: 8,
+      lineColor: [80, 80, 80],
+      lineWidth: 0.15,
+    },
+    columnStyles: {
+      0: { cellWidth: 44 },
+      1: { halign: 'right', cellWidth: 47, fontStyle: 'bold', fontSize: 7.2 },
+      2: { cellWidth: 44 },
+      3: { halign: 'right', cellWidth: 47, fontStyle: 'bold', fontSize: 7.2 },
+    },
+    alternateRowStyles: { fillColor: [248, 248, 248] },
+    theme: 'grid',
+  });
+  y = doc.lastAutoTable.finalY + 6;
 
   // ── Actual Hand Cash Verification ──
-  doc.setDrawColor(...COLORS.green);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(margin, y, pageW - margin * 2, 10, 2, 2, 'S');
-  doc.setFontSize(9);
-  doc.setTextColor(...COLORS.darkText);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Actual Hand Cash (Counted): ${fmtCur(actualHandCash, sym)}`, margin + 4, y + 6);
-  doc.setTextColor(...COLORS.green);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Verified [OK]', pageW - margin - 4, y + 6, { align: 'right' });
-  y += 15;
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [['Hand Cash Check', 'Amount']],
+    body: [
+      ['Actual Hand Cash (Counted)', fmtCur(actualHandCash, sym)],
+      ['System Hand Cash', fmtCur(reportData.handCashBalance || 0, sym)],
+      ['Verification', 'Matched'],
+    ],
+    styles: {
+      fontSize: 8,
+      cellPadding: 1.6,
+      overflow: 'ellipsize',
+      lineColor: [140, 140, 140],
+      lineWidth: 0.1,
+      valign: 'middle',
+    },
+    headStyles: {
+      fillColor: [255, 255, 255],
+      textColor: [0, 0, 0],
+      fontStyle: 'bold',
+      fontSize: 7.2,
+      lineColor: [80, 80, 80],
+      lineWidth: 0.15,
+    },
+    columnStyles: {
+      0: { cellWidth: 120 },
+      1: { halign: 'right', cellWidth: 62, fontStyle: 'bold', fontSize: 7.1 },
+    },
+    theme: 'grid',
+  });
+  y = doc.lastAutoTable.finalY + 6;
 
   // ── Net Flow ──
-  doc.setDrawColor(...COLORS.lightBorder);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(margin, y, pageW - margin * 2, 14, 2, 2, 'S');
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.gray);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Net Flow', pageW / 2, y + 4.5, { align: 'center' });
-  doc.setFontSize(14);
-  doc.setTextColor(...COLORS.darkText);
-  doc.setFont('helvetica', 'bold');
-  doc.text(fmtCur(reportData.netFlow || 0, sym), pageW / 2, y + 11, { align: 'center' });
-  y += 19;
+  autoTable(doc, {
+    startY: y,
+    margin: { left: margin, right: margin },
+    body: [['Net Flow', fmtCur(reportData.netFlow || 0, sym)]],
+    styles: {
+      fontSize: 9,
+      cellPadding: 2,
+      overflow: 'ellipsize',
+      lineColor: [140, 140, 140],
+      lineWidth: 0.1,
+      valign: 'middle',
+    },
+    columnStyles: {
+      0: { cellWidth: 120, fontStyle: 'bold' },
+      1: { halign: 'right', cellWidth: 62, fontStyle: 'bold', fontSize: 8.2 },
+    },
+    theme: 'grid',
+  });
+  y = doc.lastAutoTable.finalY + 6;
 
   // ── Transaction Details ──
   if (showTransactions && reportData.transactions?.length > 0) {
@@ -203,7 +242,7 @@ export function generateReportPdf({
         ? (txn.mother_account_id ? (txn.mother_accounts?.name || 'Mother Account') : txn.profit_account_id ? (txn.profit_accounts?.name || 'Profit Account') : 'Hand Cash')
         : '-';
       return [
-        fmtDate(txn.created_at),
+        fmtDateOnly(txn.created_at),
         txn.trn_id || '-',
         (txn.type || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase()),
         txn.customer_name || '-',
@@ -226,21 +265,37 @@ export function generateReportPdf({
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Date', 'TRN ID', 'Type', 'Customer', 'Account No.', 'Mother A/C', 'Fund Into', 'Source', 'Credit', 'Debit']],
+      head: [['Date (DD/MM/YYYY)', 'TRN ID', 'Type', 'Customer Name', 'Account No.', 'Mother A/C', 'Fund Into', 'Source', 'Credit', 'Debit']],
       body: txnRows,
-      styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize' },
-      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 6.5 },
-      columnStyles: {
-        0: { cellWidth: 28 },
-        1: { cellWidth: 18 },
-        2: { cellWidth: 15 },
-        4: { cellWidth: 'auto' },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 18 },
-        8: { halign: 'right', cellWidth: 20 },
-        9: { halign: 'right', cellWidth: 20 },
+      styles: {
+        fontSize: 7,
+        cellPadding: 1.2,
+        overflow: 'linebreak',
+        lineColor: [140, 140, 140],
+        lineWidth: 0.1,
+        valign: 'middle',
       },
-      theme: 'plain',
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 6.7,
+        lineColor: [80, 80, 80],
+        lineWidth: 0.15,
+      },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 24 },
+        2: { cellWidth: 14 },
+        3: { cellWidth: 28 },
+        4: { cellWidth: 24 },
+        5: { cellWidth: 22 },
+        6: { cellWidth: 16 },
+        7: { cellWidth: 10 },
+        8: { halign: 'right', cellWidth: 12 },
+        9: { halign: 'right', cellWidth: 12 },
+      },
+      theme: 'grid',
     });
     y = doc.lastAutoTable.finalY + 6;
   }
@@ -256,7 +311,7 @@ export function generateReportPdf({
     y += 2;
 
     const expRows = reportData.expenses.map((exp) => [
-      fmtDate(exp.created_at),
+      fmtDateOnly(exp.created_at),
       exp.trn_id || '-',
       exp.expense_categories?.name || '-',
       exp.description || '-',
@@ -274,15 +329,34 @@ export function generateReportPdf({
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Date', 'TRN ID', 'Category', 'Description', 'Deducted From', 'Account', 'Amount']],
+      head: [['Date (DD/MM/YYYY)', 'TRN ID', 'Category', 'Description', 'Deducted From', 'Account', 'Amount']],
       body: expRows,
-      styles: { fontSize: 7.5, cellPadding: 2, overflow: 'ellipsize' },
-      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
-      columnStyles: {
-        0: { cellWidth: 28 },
-        6: { halign: 'right', cellWidth: 26 },
+      styles: {
+        fontSize: 7.2,
+        cellPadding: 1.6,
+        overflow: 'linebreak',
+        lineColor: [140, 140, 140],
+        lineWidth: 0.1,
+        valign: 'middle',
       },
-      theme: 'plain',
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 6.8,
+        lineColor: [80, 80, 80],
+        lineWidth: 0.15,
+      },
+      columnStyles: {
+        0: { cellWidth: 24 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 24 },
+        3: { cellWidth: 32 },
+        4: { cellWidth: 22 },
+        5: { cellWidth: 22 },
+        6: { halign: 'right', cellWidth: 16, fontSize: 6.7, fontStyle: 'bold' },
+      },
+      theme: 'grid',
     });
     y = doc.lastAutoTable.finalY + 6;
   }
@@ -298,7 +372,7 @@ export function generateReportPdf({
     y += 2;
 
     const loanReturnRows = reportData.loanReturns.map((ret) => [
-      fmtDate(ret.created_at),
+      fmtDateOnly(ret.created_at),
       ret.trn_id || '-',
       ret.destination_label || ret.destination_type || '-',
       ret.notes || '-',
@@ -313,24 +387,41 @@ export function generateReportPdf({
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Date', 'TRN ID', 'Destination', 'Notes', 'Amount']],
+      head: [['Date (DD/MM/YYYY)', 'TRN ID', 'Destination', 'Notes', 'Amount']],
       body: loanReturnRows,
-      styles: { fontSize: 7.5, cellPadding: 2, overflow: 'ellipsize' },
-      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', fontSize: 7 },
+      styles: {
+        fontSize: 7.2,
+        cellPadding: 1.6,
+        overflow: 'linebreak',
+        lineColor: [140, 140, 140],
+        lineWidth: 0.1,
+        valign: 'middle',
+      },
+      headStyles: {
+        fillColor: [255, 255, 255],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+        fontSize: 6.8,
+        lineColor: [80, 80, 80],
+        lineWidth: 0.15,
+      },
       columnStyles: {
         0: { cellWidth: 30 },
-        4: { halign: 'right', cellWidth: 30 },
+        1: { cellWidth: 24 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 36 },
+        4: { halign: 'right', cellWidth: 16, fontSize: 6.7, fontStyle: 'bold' },
       },
-      theme: 'plain',
+      theme: 'grid',
     });
     y = doc.lastAutoTable.finalY + 6;
   }
 
   // ── Signature Section ──
   // Ensure enough space; if not, add a new page
-  if (y > pageH - 50) {
+  if (y > pageH - (margin + 36)) {
     doc.addPage();
-    y = 14;
+    y = margin;
   }
 
   y += 10;
@@ -368,7 +459,7 @@ export function generateReportPdf({
   const pageCount = doc.internal.getNumberOfPages();
   for (let p = 1; p <= pageCount; p++) {
     doc.setPage(p);
-    const footerY = pageH - 8;
+    const footerY = pageH - margin + 2;
     doc.setFontSize(7);
     doc.setTextColor(...COLORS.gray);
     doc.setFont('helvetica', 'normal');

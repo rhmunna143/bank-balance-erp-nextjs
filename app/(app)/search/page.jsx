@@ -127,6 +127,10 @@ export default function GlobalSearchPage() {
           account: e.mother_accounts?.account_number || e.mother_accounts?.name || e.profit_accounts?.name || "-",
           amount: e.amount,
           notes: e.description,
+          is_reversed: e.is_reversed,
+          reversed_at: e.reversed_at,
+          reversal_reason: e.reversal_reason,
+          reversed_by: e.reversed_by_profile?.full_name || e.reversed_by_profile?.email,
         }));
 
       const loans = (loanRes.data || []).map((l) => ({
@@ -250,7 +254,7 @@ export default function GlobalSearchPage() {
                       <td className="py-2 px-3">{row.account || "-"}</td>
                       <td className="py-2 px-3 max-w-[280px]">
                         <p className="truncate">{row.notes || "-"}</p>
-                        {row.module === "transactions" && row.is_reversed && (
+                        {(row.module === "transactions" || row.module === "expenses") && row.is_reversed && (
                           <div className="text-xs text-danger mt-1 space-y-0.5">
                             <p>Reversed</p>
                             {row.reversed_by && <p>By: {row.reversed_by}</p>}

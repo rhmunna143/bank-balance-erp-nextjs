@@ -32,7 +32,7 @@ export const reportService = {
     // Expenses
     if (includeExpenses) {
       promises.push(
-        expenseService.getAll(bankId, { startDate: startISO, endDate: endISO, limit: 5000 }),
+        expenseService.getAll(bankId, { startDate: startISO, endDate: endISO, limit: 5000, excludeReversed: true }),
       );
     } else {
       promises.push(Promise.resolve({ data: [] }));

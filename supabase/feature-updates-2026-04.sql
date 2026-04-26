@@ -651,13 +651,22 @@ BEGIN
         WHERE id = p_txn_id AND mother_account_id IS NOT NULL
       ) THEN
         UPDATE public.mother_accounts
-        SET balance = balance + (SELECT COALESCE(shortage_amount, 0) FROM public.transactions WHERE id = p_txn_id)
+        SET balance = balance - (SELECT COALESCE(shortage_amount, 0) FROM public.transactions WHERE id = p_txn_id)
         WHERE id = (SELECT mother_account_id FROM public.transactions WHERE id = p_txn_id);
       END IF;
     ELSE
       UPDATE public.hand_cash_accounts
       SET balance = balance + (SELECT amount FROM public.transactions WHERE id = p_txn_id)
       WHERE bank_id = (SELECT bank_id FROM public.transactions WHERE id = p_txn_id);
+
+      IF EXISTS (
+        SELECT 1 FROM public.transactions
+        WHERE id = p_txn_id AND mother_account_id IS NOT NULL
+      ) THEN
+        UPDATE public.mother_accounts
+        SET balance = balance - (SELECT amount FROM public.transactions WHERE id = p_txn_id)
+        WHERE id = (SELECT mother_account_id FROM public.transactions WHERE id = p_txn_id);
+      END IF;
     END IF;
 
     IF EXISTS (

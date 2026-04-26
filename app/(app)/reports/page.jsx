@@ -152,7 +152,7 @@ export default function ReportsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overflow-x-hidden max-w-full">
       <div>
         <h1 className="text-2xl font-bold">Reports</h1>
         <p className="text-sm text-[var(--color-text-muted)]">
@@ -317,15 +317,15 @@ export default function ReportsPage() {
                 </span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            <CardContent className="max-w-full overflow-x-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-full">
                 {showTransactions && (
                   <>
-                    <div className="p-3 bg-[var(--color-surface)] rounded-lg">
+                    <div className="p-3 bg-[var(--color-surface)] rounded-lg min-w-0">
                       <p className="text-xs text-[var(--color-text-muted)]">
                         Total Deposits
                       </p>
-                      <p className="text-lg font-bold text-success">
+                      <p className="text-lg font-bold text-success break-words">
                         {formatCurrency(
                           reportData.totalDeposits || 0,
                           currencySymbol
@@ -335,11 +335,11 @@ export default function ReportsPage() {
                         {reportData.depositCount || 0} txns
                       </p>
                     </div>
-                    <div className="p-3 bg-[var(--color-surface)] rounded-lg">
+                    <div className="p-3 bg-[var(--color-surface)] rounded-lg min-w-0">
                       <p className="text-xs text-[var(--color-text-muted)]">
                         Total Withdrawals
                       </p>
-                      <p className="text-lg font-bold text-danger">
+                      <p className="text-lg font-bold text-danger break-words">
                         {formatCurrency(
                           reportData.totalWithdrawals || 0,
                           currencySymbol
@@ -349,11 +349,11 @@ export default function ReportsPage() {
                         {reportData.withdrawalCount || 0} txns
                       </p>
                     </div>
-                    <div className="p-3 bg-[var(--color-surface)] rounded-lg">
+                    <div className="p-3 bg-[var(--color-surface)] rounded-lg min-w-0">
                       <p className="text-xs text-[var(--color-text-muted)]">
                         Total Cash In
                       </p>
-                      <p className="text-lg font-bold text-blue-500">
+                      <p className="text-lg font-bold text-blue-500 break-words">
                         {formatCurrency(
                           reportData.totalCashIn || 0,
                           currencySymbol
@@ -366,11 +366,11 @@ export default function ReportsPage() {
                   </>
                 )}
                 {showExpenses && (
-                  <div className="p-3 bg-[var(--color-surface)] rounded-lg">
+                  <div className="p-3 bg-[var(--color-surface)] rounded-lg min-w-0">
                     <p className="text-xs text-[var(--color-text-muted)]">
                       Total Expenses
                     </p>
-                    <p className="text-lg font-bold text-warning">
+                    <p className="text-lg font-bold text-warning break-words">
                       {formatCurrency(
                         reportData.totalExpenses || 0,
                         currencySymbol
@@ -381,11 +381,11 @@ export default function ReportsPage() {
                     </p>
                   </div>
                 )}
-                <div className="p-3 bg-[var(--color-surface)] rounded-lg border-2 border-[var(--color-primary)]">
+                <div className="p-3 bg-[var(--color-surface)] rounded-lg border-2 border-[var(--color-primary)] min-w-0">
                   <p className="text-xs text-[var(--color-text-muted)]">
                     Hand Cash Balance
                   </p>
-                  <p className="text-lg font-bold text-[var(--color-primary)]">
+                  <p className="text-lg font-bold text-[var(--color-primary)] break-words">
                     {formatCurrency(
                       reportData.handCashBalance || 0,
                       currencySymbol
@@ -404,30 +404,30 @@ export default function ReportsPage() {
                     <p className="text-sm font-semibold mb-2">
                       Mother Account Balances
                     </p>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-w-full">
                       {reportData.motherAccountBalances.map((ma) => (
                         <div
                           key={ma.id}
-                          className={`p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] ${
+                          className={`p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] min-w-0 ${
                             !ma.is_active ? "opacity-50" : ""
                           }`}
                         >
                           <p className="text-xs text-[var(--color-text-muted)]">
                             {ma.name}
                           </p>
-                          <p className="text-sm font-bold">
+                          <p className="text-sm font-bold break-words">
                             {formatCurrency(ma.balance, currencySymbol)}
                           </p>
-                          <p className="text-[10px] text-[var(--color-text-muted)] break-all">
+                          <p className="text-[10px] text-[var(--color-text-muted)] break-all overflow-hidden">
                             {ma.account_number || ""}
                           </p>
                         </div>
                       ))}
-                      <div className="p-3 bg-[var(--color-surface)] rounded-lg border-2 border-[var(--color-accent)]">
+                      <div className="p-3 bg-[var(--color-surface)] rounded-lg border-2 border-[var(--color-accent)] min-w-0">
                         <p className="text-xs text-[var(--color-text-muted)]">
                           Total Mother Balance
                         </p>
-                        <p className="text-sm font-bold">
+                        <p className="text-sm font-bold break-words">
                           {formatCurrency(
                             reportData.totalMotherBalance || 0,
                             currencySymbol
@@ -439,13 +439,13 @@ export default function ReportsPage() {
                 )}
 
               {/* Total Balance = Total Mother Balance + Hand Cash */}
-              <div className="mt-4 p-4 border-2 border-[var(--color-primary)] rounded-lg bg-[var(--color-primary)]/5">
+              <div className="mt-4 p-4 border-2 border-[var(--color-primary)] rounded-lg bg-[var(--color-primary)]/5 max-w-full overflow-x-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                   <div className="text-center">
                     <p className="text-xs text-[var(--color-text-muted)]">
                       Total Mother Balance
                     </p>
-                    <p className="text-lg font-bold">
+                    <p className="text-lg font-bold break-words">
                       {formatCurrency(
                         reportData.totalMotherBalance || 0,
                         currencySymbol
@@ -456,7 +456,7 @@ export default function ReportsPage() {
                     <p className="text-xs text-[var(--color-text-muted)]">
                       Hand Cash Balance
                     </p>
-                    <p className="text-lg font-bold">
+                    <p className="text-lg font-bold break-words">
                       {formatCurrency(
                         reportData.handCashBalance || 0,
                         currencySymbol
@@ -467,7 +467,7 @@ export default function ReportsPage() {
                     <p className="text-xs text-[var(--color-text-muted)] font-semibold">
                       Total Balance
                     </p>
-                    <p className="text-2xl font-bold text-[var(--color-primary)]">
+                    <p className="text-2xl font-bold text-[var(--color-primary)] break-words">
                       {formatCurrency(
                         (reportData.totalMotherBalance || 0) +
                           (reportData.handCashBalance || 0),

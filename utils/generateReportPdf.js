@@ -12,6 +12,9 @@ const COLORS = {
   lightBorder: [180, 180, 180],
 };
 
+const TABLE_BORDER = [0, 0, 0];
+const TABLE_TEXT = [0, 0, 0];
+
 // Map unsupported Unicode currency symbols to ASCII-safe alternatives for jsPDF
 const SYMBOL_MAP = { '৳': 'Tk ', '₹': 'Rs ', '¥': 'Y ', '€': 'EUR ', '£': 'GBP ' };
 
@@ -50,6 +53,11 @@ function fmtDateOnly(d) {
   }
 }
 
+function distributeWidths(totalWidth, weights) {
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  return weights.map((weight) => Number(((totalWidth * weight) / totalWeight).toFixed(2)));
+}
+
 /**
  * Generate a PDF report and open it in a new tab.
  */
@@ -69,6 +77,7 @@ export function generateReportPdf({
   const pageH = doc.internal.pageSize.getHeight();
   const marginInch = 0.5;
   const margin = marginInch * 25.4;
+  const tableWidth = pageW - margin * 2;
   let y = margin;
 
   // ── Header ──
@@ -143,24 +152,26 @@ export function generateReportPdf({
       fontSize: 8.2,
       cellPadding: 1.8,
       overflow: 'ellipsize',
-      lineColor: [140, 140, 140],
+      textColor: TABLE_TEXT,
+      lineColor: TABLE_BORDER,
       lineWidth: 0.1,
       valign: 'middle',
     },
     headStyles: {
       fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],
+      textColor: TABLE_TEXT,
       fontStyle: 'bold',
       fontSize: 8,
-      lineColor: [80, 80, 80],
+      lineColor: TABLE_BORDER,
       lineWidth: 0.15,
     },
     columnStyles: {
-      0: { cellWidth: 44 },
-      1: { halign: 'right', cellWidth: 47, fontStyle: 'bold', fontSize: 7.2 },
-      2: { cellWidth: 44 },
-      3: { halign: 'right', cellWidth: 47, fontStyle: 'bold', fontSize: 7.2 },
+      0: { cellWidth: 40 },
+      1: { halign: 'right', cellWidth: 52, fontStyle: 'bold', fontSize: 7.2 },
+      2: { cellWidth: 40 },
+      3: { halign: 'right', cellWidth: 52, fontStyle: 'bold', fontSize: 7.2 },
     },
+    tableWidth,
     alternateRowStyles: { fillColor: [248, 248, 248] },
     theme: 'grid',
   });
@@ -180,22 +191,24 @@ export function generateReportPdf({
       fontSize: 8,
       cellPadding: 1.6,
       overflow: 'ellipsize',
-      lineColor: [140, 140, 140],
+      textColor: TABLE_TEXT,
+      lineColor: TABLE_BORDER,
       lineWidth: 0.1,
       valign: 'middle',
     },
     headStyles: {
       fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],
+      textColor: TABLE_TEXT,
       fontStyle: 'bold',
       fontSize: 7.2,
-      lineColor: [80, 80, 80],
+      lineColor: TABLE_BORDER,
       lineWidth: 0.15,
     },
     columnStyles: {
-      0: { cellWidth: 120 },
+      0: { cellWidth: 122 },
       1: { halign: 'right', cellWidth: 62, fontStyle: 'bold', fontSize: 7.1 },
     },
+    tableWidth,
     theme: 'grid',
   });
   y = doc.lastAutoTable.finalY + 6;
@@ -209,14 +222,16 @@ export function generateReportPdf({
       fontSize: 9,
       cellPadding: 2,
       overflow: 'ellipsize',
-      lineColor: [140, 140, 140],
+      textColor: TABLE_TEXT,
+      lineColor: TABLE_BORDER,
       lineWidth: 0.1,
       valign: 'middle',
     },
     columnStyles: {
-      0: { cellWidth: 120, fontStyle: 'bold' },
+      0: { cellWidth: 122, fontStyle: 'bold' },
       1: { halign: 'right', cellWidth: 62, fontStyle: 'bold', fontSize: 8.2 },
     },
+    tableWidth,
     theme: 'grid',
   });
   y = doc.lastAutoTable.finalY + 6;
@@ -271,30 +286,32 @@ export function generateReportPdf({
         fontSize: 7,
         cellPadding: 1.2,
         overflow: 'linebreak',
-        lineColor: [140, 140, 140],
+        textColor: TABLE_TEXT,
+        lineColor: TABLE_BORDER,
         lineWidth: 0.1,
         valign: 'middle',
       },
       headStyles: {
         fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
+        textColor: TABLE_TEXT,
         fontStyle: 'bold',
         fontSize: 6.7,
-        lineColor: [80, 80, 80],
+        lineColor: TABLE_BORDER,
         lineWidth: 0.15,
       },
       columnStyles: {
         0: { cellWidth: 20 },
-        1: { cellWidth: 24 },
+        1: { cellWidth: 20 },
         2: { cellWidth: 14 },
         3: { cellWidth: 28 },
-        4: { cellWidth: 24 },
-        5: { cellWidth: 22 },
-        6: { cellWidth: 16 },
+        4: { cellWidth: 19 },
+        5: { cellWidth: 19 },
+        6: { cellWidth: 18 },
         7: { cellWidth: 10 },
-        8: { halign: 'right', cellWidth: 12 },
-        9: { halign: 'right', cellWidth: 12 },
+        8: { halign: 'right', cellWidth: 18, fontSize: 6.7, fontStyle: 'bold' },
+        9: { halign: 'right', cellWidth: 18, fontSize: 6.7, fontStyle: 'bold' },
       },
+      tableWidth,
       theme: 'grid',
     });
     y = doc.lastAutoTable.finalY + 6;
@@ -309,6 +326,8 @@ export function generateReportPdf({
     doc.setFont('helvetica', 'bold');
     doc.text('Expense Details', margin, y);
     y += 2;
+
+    const expColumnWidths = distributeWidths(tableWidth, [0.95, 0.85, 1.0, 1.45, 0.95, 0.95, 1.35]);
 
     const expRows = reportData.expenses.map((exp) => [
       fmtDateOnly(exp.created_at),
@@ -335,26 +354,28 @@ export function generateReportPdf({
         fontSize: 7.2,
         cellPadding: 1.6,
         overflow: 'linebreak',
-        lineColor: [140, 140, 140],
+        textColor: TABLE_TEXT,
+        lineColor: TABLE_BORDER,
         lineWidth: 0.1,
         valign: 'middle',
       },
       headStyles: {
         fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
+        textColor: TABLE_TEXT,
         fontStyle: 'bold',
         fontSize: 6.8,
-        lineColor: [80, 80, 80],
+        lineColor: TABLE_BORDER,
         lineWidth: 0.15,
       },
+      tableWidth,
       columnStyles: {
-        0: { cellWidth: 24 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 24 },
-        3: { cellWidth: 32 },
-        4: { cellWidth: 22 },
-        5: { cellWidth: 22 },
-        6: { halign: 'right', cellWidth: 16, fontSize: 6.7, fontStyle: 'bold' },
+        0: { cellWidth: expColumnWidths[0] },
+        1: { cellWidth: expColumnWidths[1] },
+        2: { cellWidth: expColumnWidths[2] },
+        3: { cellWidth: expColumnWidths[3] },
+        4: { cellWidth: expColumnWidths[4] },
+        5: { cellWidth: expColumnWidths[5] },
+        6: { halign: 'right', cellWidth: expColumnWidths[6], fontSize: 6.7, fontStyle: 'bold' },
       },
       theme: 'grid',
     });
@@ -371,46 +392,52 @@ export function generateReportPdf({
     doc.text('Loan Return Details', margin, y);
     y += 2;
 
+    const loanReturnColumnWidths = distributeWidths(tableWidth, [0.9, 0.85, 0.95, 1.4, 1.35, 1.5]);
+
     const loanReturnRows = reportData.loanReturns.map((ret) => [
       fmtDateOnly(ret.created_at),
       ret.trn_id || '-',
+      (ret.returned_by_profile?.full_name || ret.returned_by_profile?.email || ret.returned_by) || '-',
       ret.destination_label || ret.destination_type || '-',
       ret.notes || '-',
       fmtCur(ret.amount, sym),
     ]);
 
     loanReturnRows.push([
-      { content: 'Total Loan Returns', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: 'Total Loan Returns', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold' } },
       { content: fmtCur(reportData.totalLoanReturns || 0, sym), styles: { halign: 'right', fontStyle: 'bold' } },
     ]);
 
     autoTable(doc, {
       startY: y,
       margin: { left: margin, right: margin },
-      head: [['Date (DD/MM/YYYY)', 'TRN ID', 'Destination', 'Notes', 'Amount']],
+      head: [['Date (DD/MM/YYYY)', 'TRN ID', 'User', 'Destination', 'Notes', 'Amount']],
       body: loanReturnRows,
       styles: {
         fontSize: 7.2,
         cellPadding: 1.6,
         overflow: 'linebreak',
-        lineColor: [140, 140, 140],
+        textColor: TABLE_TEXT,
+        lineColor: TABLE_BORDER,
         lineWidth: 0.1,
         valign: 'middle',
       },
       headStyles: {
         fillColor: [255, 255, 255],
-        textColor: [0, 0, 0],
+        textColor: TABLE_TEXT,
         fontStyle: 'bold',
         fontSize: 6.8,
-        lineColor: [80, 80, 80],
+        lineColor: TABLE_BORDER,
         lineWidth: 0.15,
       },
+      tableWidth,
       columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 24 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 36 },
-        4: { halign: 'right', cellWidth: 16, fontSize: 6.7, fontStyle: 'bold' },
+        0: { cellWidth: loanReturnColumnWidths[0] },
+        1: { cellWidth: loanReturnColumnWidths[1] },
+        2: { cellWidth: loanReturnColumnWidths[2] },
+        3: { cellWidth: loanReturnColumnWidths[3] },
+        4: { cellWidth: loanReturnColumnWidths[4] },
+        5: { halign: 'right', cellWidth: loanReturnColumnWidths[5], fontSize: 6.7, fontStyle: 'bold' },
       },
       theme: 'grid',
     });
@@ -418,42 +445,94 @@ export function generateReportPdf({
   }
 
   // ── Signature Section ──
-  // Ensure enough space; if not, add a new page
-  if (y > pageH - (margin + 36)) {
+  // ── Signature Section ──
+  // Smart rendering: pick the smallest signature block that fits remaining space
+  const footerReserve = 12; // reserve space (mm) for footer area
+  let remaining = pageH - y - margin - footerReserve;
+  const heights = { full: 28, compressed: 16, compact: 8 };
+  let sigMode = null;
+
+  if (remaining >= heights.full) {
+    sigMode = 'full';
+  } else if (remaining >= heights.compressed) {
+    sigMode = 'compressed';
+  } else if (remaining >= heights.compact) {
+    sigMode = 'compact';
+  } else {
+    // nothing fits: start new page and render full
     doc.addPage();
     y = margin;
+    remaining = pageH - y - margin - footerReserve;
+    sigMode = 'full';
   }
 
-  y += 10;
-  const sigLineW = 60;
-  const sigLeftX = margin;
-  const sigRightX = pageW - margin - sigLineW;
+  if (sigMode === 'compact') {
+    y += 6;
+    const sigLineW = 40;
+    const sigLeftX = margin;
+    const sigRightX = pageW - margin - sigLineW;
+    doc.setDrawColor(...COLORS.darkText);
+    doc.setLineWidth(0.2);
+    doc.line(sigLeftX, y, sigLeftX + sigLineW, y);
+    doc.line(sigRightX, y, sigRightX + sigLineW, y);
+    doc.setFontSize(7);
+    doc.setTextColor(...COLORS.darkText);
+    doc.text('Agent', sigLeftX, y + 3);
+    doc.text('Authorized', sigRightX, y + 3);
+  } else if (sigMode === 'compressed') {
+    y += 8;
+    const sigLineW = 50;
+    const sigLeftX = margin;
+    const sigRightX = pageW - margin - sigLineW;
+    doc.setDrawColor(...COLORS.darkText);
+    doc.setLineWidth(0.25);
+    // Left
+    doc.line(sigLeftX, y, sigLeftX + sigLineW, y);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COLORS.darkText);
+    doc.text('Signature of Agent / CSO', sigLeftX, y + 3);
+    doc.setFontSize(6.5);
+    doc.setTextColor(...COLORS.gray);
+    doc.text('Name: ____________________', sigLeftX, y + 8);
+    // Right
+    doc.line(sigRightX, y, sigRightX + sigLineW, y);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...COLORS.darkText);
+    doc.text('Authorized Signature', sigRightX, y + 3);
+    doc.setFontSize(6.5);
+    doc.setTextColor(...COLORS.gray);
+    doc.text('Name: ____________________', sigRightX, y + 8);
+  } else {
+    // full
+    y += 8;
+    const sigLineW = 60;
+    const sigLeftX = margin;
+    const sigRightX = pageW - margin - sigLineW;
+    doc.setDrawColor(...COLORS.darkText);
+    doc.setLineWidth(0.3);
 
-  doc.setDrawColor(...COLORS.darkText);
-  doc.setLineWidth(0.3);
+    // Left: Agent/CSO signature
+    doc.line(sigLeftX, y, sigLeftX + sigLineW, y);
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.darkText);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Signature of Agent / CSO', sigLeftX, y + 4);
+    doc.setFontSize(7);
+    doc.setTextColor(...COLORS.gray);
+    doc.text('Name: ____________________________', sigLeftX, y + 9);
+    doc.text('Date: ____________________________', sigLeftX, y + 13);
 
-  // Left: Agent/CSO signature
-  doc.line(sigLeftX, y, sigLeftX + sigLineW, y);
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.darkText);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Signature of Agent / CSO', sigLeftX, y + 4);
-  doc.setFontSize(7);
-  doc.setTextColor(...COLORS.gray);
-  doc.text('Name: ____________________________', sigLeftX, y + 9);
-  doc.text('Date: ____________________________', sigLeftX, y + 14);
-
-  // Right: Authorized signature
-  doc.setDrawColor(...COLORS.darkText);
-  doc.line(sigRightX, y, sigRightX + sigLineW, y);
-  doc.setFontSize(8);
-  doc.setTextColor(...COLORS.darkText);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Authorized Signature', sigRightX, y + 4);
-  doc.setFontSize(7);
-  doc.setTextColor(...COLORS.gray);
-  doc.text('Name: ____________________________', sigRightX, y + 9);
-  doc.text('Date: ____________________________', sigRightX, y + 14);
+    // Right: Authorized signature
+    doc.line(sigRightX, y, sigRightX + sigLineW, y);
+    doc.setFontSize(8);
+    doc.setTextColor(...COLORS.darkText);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Authorized Signature', sigRightX, y + 4);
+    doc.setFontSize(7);
+    doc.setTextColor(...COLORS.gray);
+    doc.text('Name: ____________________________', sigRightX, y + 9);
+    doc.text('Date: ____________________________', sigRightX, y + 13);
+  }
 
   // ── Footer on every page ──
   const pageCount = doc.internal.getNumberOfPages();

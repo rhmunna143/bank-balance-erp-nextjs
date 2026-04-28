@@ -159,6 +159,19 @@ export const loanService = {
       }
     }
 
+    // Enrich with returned_by profile so callers have the user's name
+    const returnedByIds = [...new Set(data.map((r) => r.returned_by).filter(Boolean))];
+    if (returnedByIds.length) {
+      const { data: returnedProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', returnedByIds);
+      const returnedMap = Object.fromEntries((returnedProfiles || []).map((p) => [p.id, p]));
+      for (const ret of data) {
+        ret.returned_by_profile = returnedMap[ret.returned_by] || null;
+      }
+    }
+
     return data || [];
   },
 

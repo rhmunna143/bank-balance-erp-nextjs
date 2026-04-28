@@ -10,7 +10,7 @@ Agent Bank ERP is a multi-tenant, production-oriented banking/agent management w
 
 **Why this project matters (TL;DR for recruiters)**
 
-- Built as a real-world banking/agent management system demonstrating multi-tenant data handling, transaction flows, reporting, role-based access, and integrations with Supabase as a backend.
+- Built as a real-world banking/agent management system demonstrating multi-tenant data handling, transaction flows, reporting, role-based access, and integrations with subbase as a backend.
 - Production-ready UI and UX patterns, detailed reporting (PDF export), and robust services layering make this a portfolio-ready project for backend/front-end roles and full-stack candidates.
 
 ---

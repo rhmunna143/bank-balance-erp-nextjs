@@ -277,6 +277,7 @@ export const transactionService = {
         .from('expenses')
         .select('amount')
         .eq('bank_id', bankId)
+        .eq('is_reversed', false)
         .gte('created_at', todayISO),
     ]);
 

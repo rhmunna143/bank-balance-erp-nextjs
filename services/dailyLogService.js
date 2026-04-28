@@ -41,6 +41,7 @@ export const dailyLogService = {
           .from('expenses')
           .select('amount')
           .eq('bank_id', bankId)
+          .eq('is_reversed', false)
           .gte('created_at', startOfDay)
           .lte('created_at', endOfDay),
         supabase

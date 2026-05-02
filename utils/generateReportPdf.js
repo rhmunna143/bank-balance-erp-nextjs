@@ -272,7 +272,7 @@ export function generateReportPdf({
 
     // Add total row
     txnRows.push([
-      { content: 'Total', colSpan: 7, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: 'Total', colSpan: 8, styles: { halign: 'right', fontStyle: 'bold' } },
       { content: fmtCur(totalCredit, sym), styles: { halign: 'right', fontStyle: 'bold' } },
       { content: fmtCur(totalDebit, sym), styles: { halign: 'right', fontStyle: 'bold' } },
     ]);
@@ -300,16 +300,16 @@ export function generateReportPdf({
         lineWidth: 0.15,
       },
       columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 20 },
-        2: { cellWidth: 14 },
+        0: { cellWidth: 16 },
+        1: { cellWidth: 14 },
+        2: { cellWidth: 15 },
         3: { cellWidth: 28 },
-        4: { cellWidth: 19 },
+        4: { cellWidth: 20 },
         5: { cellWidth: 19 },
-        6: { cellWidth: 18 },
-        7: { cellWidth: 10 },
-        8: { halign: 'right', cellWidth: 18, fontSize: 6.7, fontStyle: 'bold' },
-        9: { halign: 'right', cellWidth: 18, fontSize: 6.7, fontStyle: 'bold' },
+        6: { cellWidth: 19 },
+        7: { cellWidth: 12 },
+        8: { halign: 'right', cellWidth: 21, fontSize: 6.7, fontStyle: 'bold' },
+        9: { halign: 'right', cellWidth: 20, fontSize: 6.7, fontStyle: 'bold' },
       },
       tableWidth,
       theme: 'grid',

@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuth } from "@/hooks/useAuth";
 import { FullPageSpinner } from "@/components/common/LoadingSpinner";
 import Link from "next/link";
 
 export default function SuperAdminLayout({ children }) {
   const router = useRouter();
-  const isSuperAdmin = useAuthStore((state) => state.isSuperAdmin);
-  const initialized = useAuthStore((state) => state.initialized);
+  const { isSuperAdmin, initialized } = useAuth();
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {

@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id // Clerk User ID
+  email      String   @unique
+  fullName   String?
+  phone      String?
+  avatarUrl  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  bankMembers BankMember[]
+  banks       Bank[]       @relation("BankOwner")
+  transactions Transaction[] @relation("PerformedBy")
+  expenses    Expense[]    @relation("ExpensePerformedBy")
+  dailyLogs   DailyLog[]   @relation("LogGeneratedBy")
+  borrowedLoans Loan[]     @relation("BorrowedLoans")
+  issuedLoans   Loan[]     @relation("IssuedLoans")
+  returnedLoans LoanReturn[] @relation("ReturnedLoans")
+}
+
+model Bank {
+  id                 String   @id @default(uuid())
+  name               String
+  slug               String   @unique
+  currency           String   @default("BDT")
+  address            String?
+  phone              String?
+  logoUrl            String?
+  theme              String   @default("default")
+  ownerId            String
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // SaaS Integration Fields
+  stripeCustomerId    String?
+  subscriptionStatus  String?  // 'active', 'past_due', 'canceled', 'unpaid', 'trialing'
+  subscriptionPlan    String?  // 'basic', 'pro', 'enterprise'
+  subscriptionId      String?
+
+  owner              User      @relation("BankOwner", fields: [ownerId], references: [id])
+  members            BankMember[]
+  motherAccounts     MotherAccount[]
+  handCashAccount    HandCashAccount?
+  profitAccounts     ProfitAccount[]
+  transactions       Transaction[]
+  expenseCategories  ExpenseCategory[]
+  expenses           Expense[]
+  dailyLogs          DailyLog[]
+  alertConfigs       AlertConfig[]
+  loans              Loan[]
+  saasPayments       SaaSPayment[]
+}
+
+model BankMember {
+  id        String   @id @default(uuid())
+  bankId    String
+  userId    String
+  role      String   @default("operator") // 'owner', 'admin', 'operator'
+  isActive  Boolean  @default(true)
+  joinedAt  DateTime @default(now())
+
+  bank      Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bankId, userId])
+}
+
+model MotherAccount {
+  id             String   @id @default(uuid())
+  bankId         String
+  name           String
+  accountNumber  String?
+  balance        Decimal  @default(0)
+  lowThreshold   Decimal  @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bank           Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  expenses       Expense[]
+}
+
+model HandCashAccount {
+  id             String   @id @default(uuid())
+  bankId         String   @unique
+  balance        Decimal  @default(0)
+  lowThreshold   Decimal  @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bank           Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+}
+
+model ProfitAccount {
+  id             String   @id @default(uuid())
+  bankId         String
+  name           String
+  description    String?
+  balance        Decimal  @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  bank           Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  expenses       Expense[]
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  bankId           String
+  type             String   // 'deposit', 'withdrawal', 'cash_in'
+  amount           Decimal
+  commission       Decimal  @default(0)
+  customerName     String?
+  customerAccount  String?
+  motherAccountId  String?
+  profitAccountId  String?
+  source           String?  // for cash_in: 'mother_account' or 'external'
+  reference        String?
+  notes            String?
+  hasShortage      Boolean  @default(false)
+  shortageAmount   Decimal  @default(0)
+  performedById    String?
+  createdAt        DateTime @default(now())
+
+  bank             Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  motherAccount    MotherAccount? @relation(fields: [motherAccountId], references: [id])
+  profitAccount    ProfitAccount? @relation(fields: [profitAccountId], references: [id])
+  performedBy      User?     @relation("PerformedBy", fields: [performedById], references: [id])
+}
+
+model ExpenseCategory {
+  id        String   @id @default(uuid())
+  bankId    String
+  name      String
+  createdAt DateTime @default(now())
+
+  bank      Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+}
+
+model Expense {
+  id               String   @id @default(uuid())
+  bankId           String
+  amount           Decimal
+  categoryId       String?
+  deductFrom       String   @default("hand_cash") // 'hand_cash', 'profit_account', 'mother_account'
+  profitAccountId  String?
+  motherAccountId  String?
+  description      String?
+  receiptUrl       String?
+  performedById    String?
+  createdAt        DateTime @default(now())
+
+  bank             Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  category         ExpenseCategory? @relation(fields: [categoryId], references: [id])
+  profitAccount    ProfitAccount? @relation(fields: [profitAccountId], references: [id])
+  motherAccount    MotherAccount? @relation(fields: [motherAccountId], references: [id])
+  performedBy      User?     @relation("ExpensePerformedBy", fields: [performedById], references: [id])
+}
+
+model DailyLog {
+  id                String   @id @default(uuid())
+  bankId            String
+  logDate           DateTime @default(now()) @db.Date
+  totalDeposits     Decimal  @default(0)
+  totalWithdrawals  Decimal  @default(0)
+  totalCashIn       Decimal  @default(0)
+  totalExpenses     Decimal  @default(0)
+  totalCommissions  Decimal  @default(0)
+  openingHandCash   Decimal  @default(0)
+  closingHandCash   Decimal  @default(0)
+  notes             String?
+  generatedById     String?
+  createdAt         DateTime @default(now())
+
+  bank              Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  generatedBy       User?    @relation("LogGeneratedBy", fields: [generatedById], references: [id])
+
+  @@unique([bankId, logDate])
+}
+
+model AlertConfig {
+  id          String   @id @default(uuid())
+  bankId      String
+  accountType String   // 'mother_account', 'hand_cash'
+  accountId   String?
+  threshold   Decimal  @default(0)
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  bank        Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+}
+
+model Loan {
+  id               String   @id @default(uuid())
+  bankId           String
+  borrowerUserId   String
+  amount           Decimal
+  remainingAmount  Decimal
+  status           String   @default("active") // 'active', 'paid'
+  sourceType       String   // 'hand_cash', 'mother_account', 'profit_account'
+  sourceAccountId  String?
+  dueDate          DateTime?
+  notes            String?
+  trnId            String?
+  issuedById       String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  bank             Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  borrower         User     @relation("BorrowedLoans", fields: [borrowerUserId], references: [id])
+  issuer           User?    @relation("IssuedLoans", fields: [issuedById], references: [id])
+  returns          LoanReturn[]
+}
+
+model LoanReturn {
+  id                   String   @id @default(uuid())
+  loanId               String
+  bankId               String
+  amount               Decimal
+  destinationType      String   // 'hand_cash', 'mother_account', 'profit_account'
+  destinationAccountId String?
+  notes                String?
+  trnId                String?
+  returnedById         String?
+  createdAt            DateTime @default(now())
+
+  loan                 Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  returnedBy           User?    @relation("ReturnedLoans", fields: [returnedById], references: [id])
+}
+
+model SaaSPayment {
+  id               String   @id @default(uuid())
+  bankId           String
+  gateway          String   // 'stripe', 'sslcommerz', 'bkash', 'uddoktapay'
+  amount           Decimal
+  currency         String   @default("BDT")
+  status           String   @default("pending") // 'pending', 'success', 'failed', 'canceled'
+  planId           String?
+  transactionId    String?  // External gateway transaction ID
+  sessionId        String?  // Gateway session ID / Token
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  bank             Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+}

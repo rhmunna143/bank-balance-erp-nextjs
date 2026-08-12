@@ -21,7 +21,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import { DateRangePicker } from "@/components/common/DateRangePicker";
 import { FundTransferForm } from "@/components/forms/FundTransferForm";
-import { transactionService } from "@/services/transactionService";
+import * as transactionService from "@/services/transactionService";
 import { useTransactionStore } from "@/stores/transactionStore";
 import { formatCurrency } from "@/utils/currency";
 import { TRANSACTION_TYPES, ITEMS_PER_PAGE } from "@/utils/constants";

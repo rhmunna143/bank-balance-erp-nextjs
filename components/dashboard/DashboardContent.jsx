@@ -17,7 +17,7 @@ import { BalanceAlert } from "@/components/alerts/BalanceAlert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Button } from "@/components/ui/Button";
-import { dailyLogService } from "@/services/dailyLogService";
+import * as dailyLogService from "@/services/dailyLogService";
 import {
   RefreshCw,
   ChevronDown,
@@ -31,11 +31,11 @@ import toast from "react-hot-toast";
 export default function DashboardContent() {
   const { user } = useAuth();
   const { bank, bankId, currencySymbol } = useBank();
-  const { accounts: motherAccounts } = useMotherAccounts();
-  const { handCash, balance: handCashBalance } = useHandCash();
-  const { accounts: profitAccounts } = useProfitAccounts();
+  const { accounts: motherAccounts } = useMotherAccounts(bank?.id);
+  const { handCash, balance: handCashBalance } = useHandCash(bank?.id);
+  const { accounts: profitAccounts } = useProfitAccounts(bank?.id);
   const { getTodaySummary, getTransactions, getExpenses } = useTransactions();
-  const { alerts } = useAlerts();
+  const { alerts } = useAlerts(bank?.id);
   const { refreshKey } = useTransactionStore();
 
   const [todaySummary, setTodaySummary] = useState({
@@ -70,7 +70,7 @@ export default function DashboardContent() {
           getTodaySummary(),
           getTransactions({ limit: 10 }),
           getExpenses({ limit: 100 }),
-          dailyLogService.getLatest(bankId, 14),
+          dailyLogService.getLatestLogs(bankId, 14),
         ]);
 
         if (summary) setTodaySummary(summary);
@@ -120,9 +120,9 @@ export default function DashboardContent() {
   const handleGenerateDailyLog = async () => {
     setGeneratingLog(true);
     try {
-      await dailyLogService.generate(bankId, user.id);
-      toast.success("Daily log generated!");
-      const logs = await dailyLogService.getLatest(bankId, 14);
+      await dailyLogService.generateLog(bankId, user.id);
+      toast.success("Daily snapshot saved!");
+      const logs = await dailyLogService.getLatestLogs(bankId, 14);
       if (logs)
         setDailyLogs(
           logs.sort((a, b) => b.log_date.localeCompare(a.log_date))

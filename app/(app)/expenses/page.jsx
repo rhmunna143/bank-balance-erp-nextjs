@@ -16,8 +16,8 @@ import {
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import { DateRangePicker } from "@/components/common/DateRangePicker";
-import { expenseService } from "@/services/expenseService";
-import { transactionService } from "@/services/transactionService";
+import * as expenseService from "@/services/expenseService";
+import * as transactionService from "@/services/transactionService";
 import { useTransactionStore } from "@/stores/transactionStore";
 import { useHandCash } from "@/hooks/useHandCash";
 import { useMotherAccounts } from "@/hooks/useMotherAccounts";
@@ -76,7 +76,7 @@ export default function ExpensesPage() {
       if (startDate) filters.startDate = `${startDate}T00:00:00`;
       if (endDate) filters.endDate = `${endDate}T23:59:59`;
 
-      const { data, count } = await expenseService.getAll(bank.id, filters);
+      const { data, count } = await expenseService.getAllExpenses(bank.id, filters);
       setExpenses(data || []);
       setTotal(count || 0);
     } catch (error) {

@@ -11,7 +11,7 @@ import { useTransactionStore } from '@/stores/transactionStore';
 export function Topbar({ onMenuClick }) {
   const { profile, signOut } = useAuth();
   const { bank } = useBank();
-  const { alerts } = useAlerts();
+  const { alerts } = useAlerts(bank?.id);
   const { triggerRefresh } = useTransactionStore();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -30,7 +30,7 @@ export function Topbar({ onMenuClick }) {
 
   const handleSignOut = async () => {
     await signOut();
-    router.push('/login');
+    router.push('/');
   };
 
   return (

@@ -2,15 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useBank } from "@/hooks/useBank";
-import { useAuthStore } from "@/stores/authStore";
+import { useUser } from "@clerk/nextjs";
 import { BankForm } from "@/components/forms/BankForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
-import { bankService } from "@/services/bankService";
-import { backupService } from "@/services/backupService";
+import * as bankService from "@/services/bankService";
+import * as backupService from "@/services/backupService";
 import {
   Settings,
   Save,
@@ -28,7 +28,7 @@ import toast from "react-hot-toast";
 
 export default function BankSettingsPage() {
   const { bank, categories, refreshBank } = useBank();
-  const { user } = useAuthStore();
+  const { user } = useUser();
   const [saving, setSaving] = useState(false);
   const [newCategory, setNewCategory] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
@@ -62,7 +62,7 @@ export default function BankSettingsPage() {
   const handleUpdateBank = async (data) => {
     setSaving(true);
     try {
-      await bankService.update(bank.id, data);
+      await bankService.updateBank(bank.id, data);
       await refreshBank();
       toast.success("Bank settings updated!");
     } catch (error) {
@@ -183,7 +183,7 @@ export default function BankSettingsPage() {
     setUploadingFile(true);
     try {
       const text = await file.text();
-      const backupData = backupService.parseBackupFile(text);
+      const backupData = await backupService.parseBackupFile(text);
       await backupService.restoreFromFile(bank.id, backupData);
       await refreshBank();
       toast.success("Data restored from file!");

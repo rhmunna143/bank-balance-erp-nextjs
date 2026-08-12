@@ -13,7 +13,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/Dialog';
-import { expenseService } from '@/services/expenseService';
+import * as expenseService from '@/services/expenseService';
 import { Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 

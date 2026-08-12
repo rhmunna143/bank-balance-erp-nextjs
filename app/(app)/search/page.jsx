@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useBank } from "@/hooks/useBank";
-import { transactionService } from "@/services/transactionService";
-import { expenseService } from "@/services/expenseService";
+import * as transactionService from "@/services/transactionService";
+import * as expenseService from "@/services/expenseService";
 import { loanService } from "@/services/loanService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -69,7 +69,7 @@ export default function GlobalSearchPage() {
             })
           : Promise.resolve({ data: [] }),
         wantsExpenses
-          ? expenseService.getAll(bank.id, {
+          ? expenseService.getAllExpenses(bank.id, {
               limit: 300,
               offset: 0,
               startDate: startISO,

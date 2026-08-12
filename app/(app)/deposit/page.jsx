@@ -12,7 +12,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { formatCurrency } from "@/utils/currency";
 import { ArrowUpRight, Wallet, Building2, List } from "lucide-react";
 import toast from "react-hot-toast";
-import { transactionService } from "@/services/transactionService";
+import * as transactionService from "@/services/transactionService";
 import { useTransactionStore } from "@/stores/transactionStore";
 
 export default function DepositPage() {

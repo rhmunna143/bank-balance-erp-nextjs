@@ -27,7 +27,7 @@ import { Label } from "@/components/ui/Label";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import { loanService } from "@/services/loanService";
-import { userService } from "@/services/userService";
+import * as userService from "@/services/userService";
 import { useHandCash } from "@/hooks/useHandCash";
 import { useMotherAccounts } from "@/hooks/useMotherAccounts";
 import { useProfitAccounts } from "@/hooks/useProfitAccounts";

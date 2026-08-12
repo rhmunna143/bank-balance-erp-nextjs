@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { useBank } from '@/hooks/useBank';
 import { useAuth } from '@/hooks/useAuth';
-import { bankService } from '@/services/bankService';
+import * as bankService from "@/services/bankService";
 import { APP_NAME } from '@/utils/constants';
 import { useState, useEffect } from 'react';
 

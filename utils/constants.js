@@ -44,6 +44,8 @@ export const RESERVED_SLUGS = [
   'register',
   'forgot-password',
   'reset-password',
+  'sign-in',
+  'sign-up',
   'create-bank',
   'superadmin',
   'api',
@@ -53,6 +55,7 @@ export const RESERVED_SLUGS = [
   'admin',
   'search',
   'fund-transfer',
+  'not-found',
 ];
 
 export const REPORT_PERIODS = {

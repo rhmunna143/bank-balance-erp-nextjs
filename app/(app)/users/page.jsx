@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/Dialog";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
-import { userService } from "@/services/userService";
+import * as userService from "@/services/userService";
 import { ROLES } from "@/utils/constants";
 import { Users, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";

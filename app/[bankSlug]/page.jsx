@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useBank } from "@/hooks/useBank";
-import { supabase } from "@/services/supabaseClient";
+
 import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { AboutSection } from "@/components/landing/AboutSection";

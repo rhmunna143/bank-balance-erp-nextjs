@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useBankStore } from "@/stores/bankStore";
-import { useAuthStore } from "@/stores/authStore";
+import { useUser } from "@clerk/nextjs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { FullPageSpinner } from "@/components/common/LoadingSpinner";
 import { RESERVED_SLUGS } from "@/utils/constants";
@@ -12,7 +12,7 @@ export default function BankSlugLayout({ children }) {
   const { bankSlug } = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const user = useAuthStore((state) => state.user);
+  const { user } = useUser();
   const loadBankBySlug = useBankStore((state) => state.loadBankBySlug);
   const bank = useBankStore((state) => state.bank);
   const [loading, setLoading] = useState(true);

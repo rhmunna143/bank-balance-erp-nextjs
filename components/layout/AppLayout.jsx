@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useBankStore } from '@/stores/bankStore';
 import { FullPageSpinner } from '@/components/common/LoadingSpinner';
 
 export function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const user = useAuthStore((state) => state.user);
-  const initialized = useAuthStore((state) => state.initialized);
+  const { user, initialized } = useAuth();
   const bank = useBankStore((state) => state.bank);
   const bankLoading = useBankStore((state) => state.loading);
   const bankLoaded = useBankStore((state) => state.loaded);

@@ -19,7 +19,7 @@ import {
   List,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { transactionService } from "@/services/transactionService";
+import * as transactionService from "@/services/transactionService";
 import { useTransactionStore } from "@/stores/transactionStore";
 
 export default function CashInPage() {

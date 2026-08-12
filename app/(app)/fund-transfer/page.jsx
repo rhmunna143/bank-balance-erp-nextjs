@@ -12,7 +12,7 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FundTransferForm } from "@/components/forms/FundTransferForm";
 import { TransactionTable } from "@/components/tables/TransactionTable";
-import { transactionService } from "@/services/transactionService";
+import * as transactionService from "@/services/transactionService";
 import { useTransactionStore } from "@/stores/transactionStore";
 
 export default function FundTransferPage() {

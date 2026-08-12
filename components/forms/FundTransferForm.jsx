@@ -54,7 +54,7 @@ export function FundTransferForm({
 
   const getOptions = (type) => {
     if (type === "mother_account") {
-      return motherAccounts.map((a) => ({ id: a.id, label: `${a.name} (${a.account_number})` }));
+      return motherAccounts.map((a) => ({ id: a.id, label: `${a.name} (${a.accountNumber})` }));
     }
     if (type === "profit_account") {
       return profitAccounts.map((a) => ({ id: a.id, label: a.name }));
@@ -113,7 +113,7 @@ export function FundTransferForm({
         {sourceType && sourceType !== "hand_cash" && (
           <div className="space-y-2">
             <Label>Source Account *</Label>
-            <Select onValueChange={(val) => setValue("source_account_id", val)}>
+            <Select value={watch("source_account_id") || ""} onValueChange={(val) => setValue("source_account_id", val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select source account" />
               </SelectTrigger>

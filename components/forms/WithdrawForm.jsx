@@ -99,14 +99,14 @@ export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmi
 
         <div className="space-y-2">
           <Label>Mother Account *</Label>
-          <Select onValueChange={(val) => setValue('mother_account_id', val)}>
+          <Select value={watch('mother_account_id') || ""} onValueChange={(val) => setValue('mother_account_id', val)}>
             <SelectTrigger>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
               {motherAccounts.map((acc) => (
                 <SelectItem key={acc.id} value={acc.id}>
-                  {acc.name} ({acc.account_number})
+                  {acc.name} ({acc.accountNumber})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -137,14 +137,14 @@ export function WithdrawForm({ motherAccounts = [], handCashBalance = 0, onSubmi
               <div className="space-y-3 pt-2 border-t border-warning/20">
                 <div className="space-y-2">
                   <Label>Deduct From Mother Account *</Label>
-                  <Select onValueChange={(val) => setValue('shortage_mother_account_id', val)}>
+                  <Select value={watch('shortage_mother_account_id') || ""} onValueChange={(val) => setValue('shortage_mother_account_id', val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select mother account" />
                     </SelectTrigger>
                     <SelectContent>
                       {motherAccounts.map((acc) => (
                         <SelectItem key={acc.id} value={acc.id}>
-                          {acc.name} ({acc.account_number}) — {currencySymbol}{parseFloat(acc.balance).toFixed(2)}
+                          {acc.name} ({acc.accountNumber}) — {currencySymbol}{parseFloat(acc.balance).toFixed(2)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -293,7 +293,7 @@ export default function TransactionHistoryPage() {
             </DialogDescription>
           </DialogHeader>
           <FundTransferForm
-            motherAccounts={(motherAccounts || []).filter((a) => a.is_active)}
+            motherAccounts={(motherAccounts || []).filter((a) => a.isActive)}
             profitAccounts={profitAccounts || []}
             loading={transfering}
             onSubmit={async (data) => {

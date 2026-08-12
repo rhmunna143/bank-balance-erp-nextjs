@@ -18,9 +18,9 @@ export function MotherAccountForm({ defaultValues, onSubmit, loading = false, is
     resolver: zodResolver(motherAccountSchema),
     defaultValues: defaultValues || {
       name: '',
-      account_number: '',
+      accountNumber: '',
       balance: 0,
-      low_threshold: 0,
+      lowThreshold: 0,
     },
   });
 
@@ -40,9 +40,9 @@ export function MotherAccountForm({ defaultValues, onSubmit, loading = false, is
 
         <div className="space-y-2">
           <Label>Account Number *</Label>
-          <Input {...register('account_number')} placeholder="e.g., 1234567890" />
-          {errors.account_number && (
-            <p className="text-xs text-danger">{errors.account_number.message}</p>
+          <Input {...register('accountNumber')} placeholder="e.g., 1234567890" />
+          {errors.accountNumber && (
+            <p className="text-xs text-danger">{errors.accountNumber.message}</p>
           )}
         </div>
 
@@ -54,7 +54,7 @@ export function MotherAccountForm({ defaultValues, onSubmit, loading = false, is
 
         <div className="space-y-2">
           <Label>Low Balance Threshold</Label>
-          <Input type="number" step="0.01" {...register('low_threshold', { valueAsNumber: true })} />
+          <Input type="number" step="0.01" {...register('lowThreshold', { valueAsNumber: true })} />
         </div>
       </div>
 

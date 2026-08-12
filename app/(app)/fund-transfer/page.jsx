@@ -96,7 +96,7 @@ export default function FundTransferPage() {
         </CardHeader>
         <CardContent>
           <FundTransferForm
-            motherAccounts={(motherAccounts || []).filter((a) => a.is_active)}
+            motherAccounts={(motherAccounts || []).filter((a) => a.isActive)}
             profitAccounts={profitAccounts || []}
             loading={transfering}
             onSubmit={handleTransfer}

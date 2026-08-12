@@ -45,7 +45,7 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
   const getTargetOptions = () => {
     switch (targetType) {
       case 'mother_account':
-        return motherAccounts.map((acc) => ({ id: acc.id, label: `${acc.name} (${acc.account_number})` }));
+        return motherAccounts.map((acc) => ({ id: acc.id, label: `${acc.name} (${acc.accountNumber})` }));
       case 'profit_account':
         return (profitAccounts || []).map((acc) => ({ id: acc.id, label: acc.name }));
       case 'hand_cash':
@@ -69,6 +69,7 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
         <div className="space-y-2">
           <Label>Fund Into *</Label>
           <Select
+            value={watch('target_type') || ""}
             onValueChange={(val) => {
               setValue('target_type', val);
               setValue('target_id', '');
@@ -94,7 +95,7 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
         {targetType && targetType !== 'hand_cash' && (
           <div className="space-y-2">
             <Label>Target Account *</Label>
-            <Select onValueChange={(val) => setValue('target_id', val)}>
+            <Select value={watch('target_id') || ""} onValueChange={(val) => setValue('target_id', val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
@@ -128,14 +129,16 @@ export function CashInForm({ motherAccounts = [], profitAccounts = [], handCashI
 
         <div className="space-y-2">
           <Label>Source</Label>
-          <Select onValueChange={(val) => {
-            setValue('source', val);
-            // If Hand Cash source selected and target is hand_cash, reset target
-            if (val === 'Hand Cash' && (watch('target_type') === 'hand_cash' || watch('target_type') === 'profit_account')) {
-              setValue('target_type', '');
-              setValue('target_id', '');
-            }
-          }}>
+          <Select
+            value={watch('source') || ""}
+            onValueChange={(val) => {
+              setValue('source', val);
+              if (val === 'Hand Cash' && (watch('target_type') === 'hand_cash' || watch('target_type') === 'profit_account')) {
+                setValue('target_type', '');
+                setValue('target_id', '');
+              }
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Where is the money from?" />
             </SelectTrigger>

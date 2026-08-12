@@ -51,7 +51,7 @@ export function ExpenseForm({
       case 'profit_account':
         return profitAccounts.map((acc) => ({ id: acc.id, label: acc.name }));
       case 'mother_account':
-        return motherAccounts.map((acc) => ({ id: acc.id, label: `${acc.name} (${acc.account_number})` }));
+        return motherAccounts.map((acc) => ({ id: acc.id, label: `${acc.name} (${acc.accountNumber})` }));
       case 'hand_cash':
         return handCashId ? [{ id: handCashId, label: 'Hand Cash' }] : [];
       default:
@@ -72,7 +72,7 @@ export function ExpenseForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Category *</Label>
-          <Select onValueChange={(val) => setValue('category_id', val)}>
+          <Select value={watch('category_id') || ""} onValueChange={(val) => setValue('category_id', val)}>
             <SelectTrigger>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
@@ -146,7 +146,7 @@ export function ExpenseForm({
         {deductedFromType && deductedFromType !== 'hand_cash' && (
           <div className="space-y-2">
             <Label>Account *</Label>
-            <Select onValueChange={(val) => setValue('deducted_from_id', val)}>
+            <Select value={watch('deducted_from_id') || ""} onValueChange={(val) => setValue('deducted_from_id', val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>

@@ -125,7 +125,7 @@ export default function DepositPage() {
           </CardContent>
         </Card>
         {motherAccounts
-          .filter((a) => a.is_active)
+          .filter((a) => a.isActive)
           .map((ma) => (
             <Card key={ma.id}>
               <CardContent className="py-4 flex items-center gap-3">
@@ -153,7 +153,7 @@ export default function DepositPage() {
           <DepositForm
             onSubmit={handleDeposit}
             loading={submitting}
-            motherAccounts={motherAccounts.filter((a) => a.is_active)}
+            motherAccounts={motherAccounts.filter((a) => a.isActive)}
           />
         </CardContent>
       </Card>

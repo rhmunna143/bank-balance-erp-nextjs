@@ -19,7 +19,7 @@ import { TrendingUp, Plus, Edit2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function ProfitAccountsPage() {
-  const { accounts, loading, create, update } = useProfitAccounts();
+  const { accounts, loading, createAccount: create, updateAccount: update } = useProfitAccounts();
   const { currencySymbol } = useBank();
   const [showCreate, setShowCreate] = useState(false);
   const [editAccount, setEditAccount] = useState(null);

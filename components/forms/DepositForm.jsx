@@ -91,14 +91,14 @@ export function DepositForm({ motherAccounts = [], onSubmit, loading = false }) 
 
         <div className="space-y-2">
           <Label>Mother Account *</Label>
-          <Select onValueChange={(val) => setValue('mother_account_id', val)}>
+          <Select value={watch('mother_account_id') || ""} onValueChange={(val) => setValue('mother_account_id', val)}>
             <SelectTrigger>
               <SelectValue placeholder="Select account" />
             </SelectTrigger>
             <SelectContent>
               {motherAccounts.map((acc) => (
                 <SelectItem key={acc.id} value={acc.id}>
-                  {acc.name} ({acc.account_number})
+                  {acc.name} ({acc.accountNumber})
                 </SelectItem>
               ))}
             </SelectContent>

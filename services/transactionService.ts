@@ -178,6 +178,14 @@ export async function processCashIn(params: any) {
     });
   }
 
+  // If source is Hand Cash, we deduct from it
+  if (params.source === 'Hand Cash' && params.target_type !== 'hand_cash') {
+    await prisma.handCashAccount.update({
+      where: { bankId: params.bank_id },
+      data: { balance: { decrement: params.amount } }
+    });
+  }
+
   const txn = await prisma.transaction.create({
     data: {
       bankId: params.bank_id,
@@ -185,6 +193,7 @@ export async function processCashIn(params: any) {
       amount: params.amount,
       source: params.source || null,
       motherAccountId: params.target_type === 'mother_account' ? params.target_id : null,
+      profitAccountId: params.target_type === 'profit_account' ? params.target_id : null,
       reference: params.reference || null,
       notes: params.notes || null,
       performedById: userId,
@@ -232,12 +241,221 @@ export async function processExpense(params: any) {
   return serialize(expense);
 }
 
-export async function processFundTransfer(_params: any) {
-  throw new Error("processFundTransfer not implemented yet in new schema.");
+export async function processFundTransfer(params: any) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  // Decrease balance from source
+  if (params.source_type === 'hand_cash') {
+    await prisma.handCashAccount.update({
+      where: { bankId: params.bank_id },
+      data: { balance: { decrement: params.amount } }
+    });
+  } else if (params.source_type === 'mother_account' && params.source_account_id) {
+    await prisma.motherAccount.update({
+      where: { id: params.source_account_id },
+      data: { balance: { decrement: params.amount } }
+    });
+  } else if (params.source_type === 'profit_account' && params.source_account_id) {
+    await prisma.profitAccount.update({
+      where: { id: params.source_account_id },
+      data: { balance: { decrement: params.amount } }
+    });
+  }
+
+  // Increase balance in destination
+  if (params.destination_type === 'hand_cash') {
+    await prisma.handCashAccount.update({
+      where: { bankId: params.bank_id },
+      data: { balance: { increment: params.amount } }
+    });
+  } else if (params.destination_type === 'mother_account' && params.destination_account_id) {
+    await prisma.motherAccount.update({
+      where: { id: params.destination_account_id },
+      data: { balance: { increment: params.amount } }
+    });
+  } else if (params.destination_type === 'profit_account' && params.destination_account_id) {
+    await prisma.profitAccount.update({
+      where: { id: params.destination_account_id },
+      data: { balance: { increment: params.amount } }
+    });
+  }
+
+  let motherAccountId = null;
+  let profitAccountId = null;
+  let reference = `Transfer from ${params.source_type} to ${params.destination_type}`;
+  let customerName = params.destination_name || null;
+  let customerAccount = params.destination_account || null;
+
+  if (params.source_type === 'mother_account') {
+    motherAccountId = params.source_account_id;
+  } else if (params.destination_type === 'mother_account') {
+    motherAccountId = params.destination_account_id;
+  }
+
+  if (params.source_type === 'profit_account') {
+    profitAccountId = params.source_account_id;
+  } else if (params.destination_type === 'profit_account') {
+    profitAccountId = params.destination_account_id;
+  }
+
+  if (params.source_type === 'mother_account' && params.destination_type === 'mother_account') {
+    customerAccount = params.destination_account_id;
+  }
+
+  const txn = await prisma.transaction.create({
+    data: {
+      bankId: params.bank_id,
+      type: 'fund_transfer',
+      amount: params.amount,
+      source: params.source_type,
+      customerName: customerName,
+      customerAccount: customerAccount,
+      motherAccountId: motherAccountId,
+      profitAccountId: profitAccountId,
+      reference: reference,
+      notes: params.notes || null,
+      performedById: userId,
+      createdAt: params.created_at ? new Date(params.created_at) : undefined,
+    }
+  });
+
+  return serialize(txn);
 }
 
-export async function reverseTransaction(_params: any) {
-  throw new Error("reverseTransaction not implemented yet in new schema.");
+export async function reverseTransaction(params: any) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  const txn = await prisma.transaction.findUnique({
+    where: { id: params.txn_id }
+  });
+  if (!txn) throw new Error("Transaction not found");
+
+  const { type, amount, commission, motherAccountId, profitAccountId, bankId, hasShortage, shortageAmount, source, reference, customerAccount } = txn;
+
+  if (type === 'deposit') {
+    await prisma.handCashAccount.update({
+      where: { bankId },
+      data: { balance: { decrement: amount } }
+    });
+    if (motherAccountId) {
+      await prisma.motherAccount.update({
+        where: { id: motherAccountId },
+        data: { balance: { increment: amount } }
+      });
+    }
+    if (commission && commission.toNumber() > 0 && profitAccountId) {
+      await prisma.profitAccount.update({
+        where: { id: profitAccountId },
+        data: { balance: { decrement: commission } }
+      });
+    }
+  } else if (type === 'withdrawal') {
+    if (hasShortage) {
+      const amountToRevertToHandCash = amount.toNumber() - shortageAmount.toNumber();
+      await prisma.handCashAccount.update({
+        where: { bankId },
+        data: { balance: { increment: amountToRevertToHandCash } }
+      });
+      if (motherAccountId) {
+        await prisma.motherAccount.update({
+          where: { id: motherAccountId },
+          data: { balance: { increment: shortageAmount } }
+        });
+      }
+    } else {
+      await prisma.handCashAccount.update({
+        where: { bankId },
+        data: { balance: { increment: amount } }
+      });
+      if (motherAccountId) {
+        await prisma.motherAccount.update({
+          where: { id: motherAccountId },
+          data: { balance: { decrement: amount } }
+        });
+      }
+    }
+    if (commission && commission.toNumber() > 0 && profitAccountId) {
+      await prisma.profitAccount.update({
+        where: { id: profitAccountId },
+        data: { balance: { decrement: commission } }
+      });
+    }
+  } else if (type === 'cash_in') {
+    if (motherAccountId) {
+      await prisma.motherAccount.update({
+        where: { id: motherAccountId },
+        data: { balance: { decrement: amount } }
+      });
+    } else if (profitAccountId) {
+      await prisma.profitAccount.update({
+        where: { id: profitAccountId },
+        data: { balance: { decrement: amount } }
+      });
+    } else {
+      await prisma.handCashAccount.update({
+        where: { bankId },
+        data: { balance: { decrement: amount } }
+      });
+    }
+    if (source === 'Hand Cash') {
+      await prisma.handCashAccount.update({
+        where: { bankId },
+        data: { balance: { increment: amount } }
+      });
+    }
+  } else if (type === 'fund_transfer') {
+    if (source === 'hand_cash') {
+      await prisma.handCashAccount.update({
+        where: { bankId },
+        data: { balance: { increment: amount } }
+      });
+    } else if (source === 'mother_account' && motherAccountId) {
+      await prisma.motherAccount.update({
+        where: { id: motherAccountId },
+        data: { balance: { increment: amount } }
+      });
+    } else if (source === 'profit_account' && profitAccountId) {
+      await prisma.profitAccount.update({
+        where: { id: profitAccountId },
+        data: { balance: { increment: amount } }
+      });
+    }
+
+    const destMatch = reference?.match(/to (\w+)$/);
+    const destination_type = destMatch ? destMatch[1] : null;
+
+    if (destination_type === 'hand_cash') {
+      await prisma.handCashAccount.update({
+        where: { bankId },
+        data: { balance: { decrement: amount } }
+      });
+    } else if (destination_type === 'mother_account') {
+      const targetId = (source === 'mother_account') ? customerAccount : motherAccountId;
+      if (targetId) {
+        await prisma.motherAccount.update({
+          where: { id: targetId },
+          data: { balance: { decrement: amount } }
+        });
+      }
+    } else if (destination_type === 'profit_account') {
+      const targetId = (source === 'profit_account') ? customerAccount : profitAccountId;
+      if (targetId) {
+        await prisma.profitAccount.update({
+          where: { id: targetId },
+          data: { balance: { decrement: amount } }
+        });
+      }
+    }
+  }
+
+  // Record a reverse note or just delete the transaction
+  await prisma.transaction.delete({
+    where: { id: params.txn_id }
+  });
+
+  return { success: true };
 }
 
 export async function getTransactions(bankId: string, filters: any = {}) {

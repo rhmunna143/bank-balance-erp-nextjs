@@ -49,7 +49,7 @@ export function LoanIssueForm({
   const getSourceAccounts = () => {
     switch (sourceType) {
       case 'mother_account':
-        return motherAccounts.map((acc) => ({ id: acc.id, label: `${acc.name} (${acc.account_number})` }));
+        return motherAccounts.map((acc) => ({ id: acc.id, label: `${acc.name} (${acc.accountNumber})` }));
       case 'profit_account':
         return profitAccounts.map((acc) => ({ id: acc.id, label: acc.name }));
       default:
@@ -67,7 +67,7 @@ export function LoanIssueForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Borrower *</Label>
-          <Select onValueChange={(val) => setValue('borrower_user_id', val)}>
+          <Select value={watch('borrower_user_id') || ""} onValueChange={(val) => setValue('borrower_user_id', val)}>
             <SelectTrigger>
               <SelectValue placeholder="Select borrower" />
             </SelectTrigger>
@@ -111,6 +111,7 @@ export function LoanIssueForm({
         <div className="space-y-2">
           <Label>Source Type *</Label>
           <Select
+            value={watch('source_type') || ""}
             onValueChange={(val) => {
               setValue('source_type', val);
               setValue('source_account_id', '');
@@ -133,7 +134,7 @@ export function LoanIssueForm({
         {sourceType && sourceType !== 'hand_cash' && (
           <div className="space-y-2">
             <Label>Source Account *</Label>
-            <Select onValueChange={(val) => setValue('source_account_id', val)}>
+            <Select value={watch('source_account_id') || ""} onValueChange={(val) => setValue('source_account_id', val)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>

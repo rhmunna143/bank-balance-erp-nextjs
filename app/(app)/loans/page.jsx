@@ -328,7 +328,7 @@ export default function LoansPage() {
           {selectedLoan && (
             <LoanReturnForm
               loan={selectedLoan}
-              motherAccounts={(motherAccounts || []).filter((a) => a.is_active)}
+              motherAccounts={(motherAccounts || []).filter((a) => a.isActive)}
               profitAccounts={profitAccounts || []}
               onSubmit={handleReturnLoan}
               loading={submitting}

@@ -19,7 +19,7 @@ import { Building2, Plus, Edit2, Power } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function MotherAccountsPage() {
-  const { accounts, loading, create, update, toggleActive } =
+  const { accounts, loading, createAccount: create, updateAccount: update, toggleActive } =
     useMotherAccounts();
   const { currencySymbol, isAdmin } = useBank();
   const [showCreate, setShowCreate] = useState(false);
@@ -54,9 +54,9 @@ export default function MotherAccountsPage() {
 
   const handleToggleActive = async (account) => {
     try {
-      await toggleActive(account.id, !account.is_active);
+      await toggleActive(account.id, !account.isActive);
       toast.success(
-        `Account ${account.is_active ? "deactivated" : "activated"}!`
+        `Account ${account.isActive ? "deactivated" : "activated"}!`
       );
     } catch (error) {
       toast.error("Failed to update account status");
@@ -96,7 +96,7 @@ export default function MotherAccountsPage() {
           {accounts.map((account) => (
             <Card
               key={account.id}
-              className={!account.is_active ? "opacity-60" : ""}
+              className={!account.isActive ? "opacity-60" : ""}
             >
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-base font-medium">
@@ -120,7 +120,7 @@ export default function MotherAccountsPage() {
                     >
                       <Power
                         className={`h-4 w-4 ${
-                          account.is_active ? "text-success" : "text-danger"
+                          account.isActive ? "text-success" : "text-danger"
                         }`}
                       />
                     </Button>
@@ -129,25 +129,25 @@ export default function MotherAccountsPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-[var(--color-text-muted)] mb-2">
-                  {account.account_number}
+                  {account.accountNumber}
                 </p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(account.balance, currencySymbol)}
                 </p>
-                {account.low_threshold > 0 && (
+                {account.lowThreshold > 0 && (
                   <p className="text-xs text-[var(--color-text-muted)] mt-2">
                     Low threshold:{" "}
-                    {formatCurrency(account.low_threshold, currencySymbol)}
+                    {formatCurrency(account.lowThreshold, currencySymbol)}
                   </p>
                 )}
                 <span
                   className={`inline-block mt-2 text-xs rounded-full px-2 py-0.5 ${
-                    account.is_active
+                    account.isActive
                       ? "bg-success/10 text-success"
                       : "bg-gray-100 text-gray-500"
                   }`}
                 >
-                  {account.is_active ? "Active" : "Inactive"}
+                  {account.isActive ? "Active" : "Inactive"}
                 </span>
               </CardContent>
             </Card>

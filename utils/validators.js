@@ -23,9 +23,9 @@ export const createBankSchema = z.object({
 
 export const motherAccountSchema = z.object({
   name: z.string().min(2, 'Account name must be at least 2 characters'),
-  account_number: z.string().min(1, 'Account number is required'),
+  accountNumber: z.string().min(1, 'Account number is required'),
   balance: z.coerce.number().min(0, 'Balance cannot be negative').default(0),
-  low_threshold: z.coerce.number().min(0).default(0),
+  lowThreshold: z.coerce.number().min(0).default(0),
 });
 
 export const profitAccountSchema = z.object({

@@ -75,7 +75,7 @@ export function LoanReturnForm({
 
   const destinationOptions =
     destinationType === 'mother_account'
-      ? motherAccounts.map((a) => ({ id: a.id, label: `${a.name} (${a.account_number})` }))
+      ? motherAccounts.map((a) => ({ id: a.id, label: `${a.name} (${a.accountNumber})` }))
       : destinationType === 'profit_account'
         ? profitAccounts.map((a) => ({ id: a.id, label: a.name }))
         : [];
@@ -151,7 +151,7 @@ export function LoanReturnForm({
         <div className="space-y-2">
           <Label>Return Destination *</Label>
           <Select
-            value={destinationType || ''}
+            value={watch('destination_type') || ""}
             onValueChange={(val) => {
               setValue('destination_type', val, { shouldValidate: true });
               setValue('destination_account_id', '', { shouldValidate: true });
@@ -173,7 +173,7 @@ export function LoanReturnForm({
           <div className="space-y-2">
             <Label>Destination Account *</Label>
             <Select
-              value={watch('destination_account_id') || ''}
+              value={watch('destination_account_id') || ""}
               onValueChange={(val) => setValue('destination_account_id', val, { shouldValidate: true })}
             >
               <SelectTrigger>

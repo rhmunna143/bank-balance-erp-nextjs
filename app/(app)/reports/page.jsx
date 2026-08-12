@@ -409,7 +409,7 @@ export default function ReportsPage() {
                         <div
                           key={ma.id}
                           className={`p-3 bg-[var(--color-surface)] rounded-lg border border-[var(--color-border)] min-w-0 ${
-                            !ma.is_active ? "opacity-50" : ""
+                            !ma.isActive ? "opacity-50" : ""
                           }`}
                         >
                           <p className="text-xs text-[var(--color-text-muted)]">
@@ -419,7 +419,7 @@ export default function ReportsPage() {
                             {formatCurrency(ma.balance, currencySymbol)}
                           </p>
                           <p className="text-[10px] text-[var(--color-text-muted)] break-all overflow-hidden">
-                            {ma.account_number || ""}
+                            {ma.accountNumber || ""}
                           </p>
                         </div>
                       ))}
@@ -554,7 +554,7 @@ export default function ReportsPage() {
                               </td>
                               <td className="py-2 px-3 whitespace-nowrap">
                                 {txn.mother_accounts?.name ||
-                                  txn.mother_accounts?.account_number ||
+                                  txn.motherAccount?.accountNumber ||
                                   "-"}
                               </td>
                               <td className="py-2 px-3 whitespace-nowrap">
@@ -665,7 +665,7 @@ export default function ReportsPage() {
                             </td>
                             <td className="py-2 px-3">
                               {exp.mother_accounts?.name ||
-                                exp.mother_accounts?.account_number ||
+                                exp.motherAccount?.accountNumber ||
                                 exp.profit_accounts?.name ||
                                 "-"}
                             </td>

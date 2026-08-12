@@ -69,6 +69,7 @@ export default function DepositPage() {
       await transactionService.processDeposit({
         bank_id: bank.id,
         customer_name: data.customer_name,
+        customer_phone: data.customer_phone || null,
         customer_account: data.customer_account_no || null,
         trn_id: data.trn_id || null,
         amount: data.amount,

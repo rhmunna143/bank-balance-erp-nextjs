@@ -16,6 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/Dialog";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Search } from "lucide-react";
 
@@ -36,6 +42,7 @@ export default function GlobalSearchPage() {
   const [endDate, setEndDate] = useState(getToday());
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
+  const [viewingRecord, setViewingRecord] = useState(null);
 
   const filtersSummary = useMemo(
     () => [
@@ -91,56 +98,51 @@ export default function GlobalSearchPage() {
         id: `txn-${t.id}`,
         module: "transactions",
         recordId: t.id,
-        trn_id: t.trn_id,
-        date: t.created_at,
+        trn_id: t.trnId || t.reference || "-",
+        date: t.createdAt,
         type: t.type,
-        name: t.customer_name || t.destination_name || "-",
-        account: t.customer_account || t.destination_account || "-",
+        name: t.customerName || "-",
+        phone: t.customerPhone || "-",
+        account: t.customerAccount || "-",
         amount: t.amount,
         notes: t.notes,
-        is_reversed: t.is_reversed,
-        reversed_at: t.reversed_at,
-        reversal_reason: t.reversal_reason,
-        reversed_by: t.reversed_by_profile?.full_name || t.reversed_by_profile?.email,
       }));
 
       const expenses = (expRes.data || [])
         .filter((e) => {
           if (!normalizedQuery) return true;
           return (
-            inText(e.trn_id, normalizedQuery) ||
+            inText(e.trnId, normalizedQuery) ||
             inText(e.description, normalizedQuery) ||
-            inText(e.expense_categories?.name, normalizedQuery) ||
-            inText(e.mother_accounts?.name, normalizedQuery) ||
-            inText(e.mother_accounts?.account_number, normalizedQuery) ||
-            inText(e.profit_accounts?.name, normalizedQuery)
+            inText(e.category?.name, normalizedQuery) ||
+            inText(e.motherAccount?.name, normalizedQuery) ||
+            inText(e.motherAccount?.accountNumber, normalizedQuery) ||
+            inText(e.profitAccount?.name, normalizedQuery)
           );
         })
         .map((e) => ({
           id: `exp-${e.id}`,
           module: "expenses",
           recordId: e.id,
-          trn_id: e.trn_id,
-          date: e.created_at,
-          type: e.deduct_from,
-          name: e.expense_categories?.name || "Expense",
-          account: e.mother_accounts?.account_number || e.mother_accounts?.name || e.profit_accounts?.name || "-",
+          trn_id: e.trnId || "-",
+          date: e.createdAt,
+          type: e.deductFrom,
+          name: e.category?.name || "Expense",
+          phone: "-",
+          account: e.motherAccount?.accountNumber || e.motherAccount?.name || e.profitAccount?.name || "-",
           amount: e.amount,
           notes: e.description,
-          is_reversed: e.is_reversed,
-          reversed_at: e.reversed_at,
-          reversal_reason: e.reversal_reason,
-          reversed_by: e.reversed_by_profile?.full_name || e.reversed_by_profile?.email,
         }));
 
       const loans = (loanRes.data || []).map((l) => ({
         id: `loan-${l.id}`,
         module: "loans",
         recordId: l.id,
-        trn_id: l.trn_id,
-        date: l.created_at,
+        trn_id: l.trnId || "-",
+        date: l.createdAt,
         type: l.status,
-        name: l.borrower?.full_name || l.borrower?.email || "-",
+        name: l.borrower?.fullName || l.borrower?.email || "-",
+        phone: l.borrower?.phone || "-",
         account: l.borrower?.email || "-",
         amount: l.amount,
         notes: l.notes,
@@ -237,6 +239,7 @@ export default function GlobalSearchPage() {
                     <th className="text-left py-2 px-3">TRN ID</th>
                     <th className="text-left py-2 px-3">Type/Status</th>
                     <th className="text-left py-2 px-3">Name</th>
+                    <th className="text-left py-2 px-3">Mobile No</th>
                     <th className="text-left py-2 px-3">Account</th>
                     <th className="text-left py-2 px-3">Notes</th>
                     <th className="text-right py-2 px-3">Amount</th>
@@ -251,26 +254,21 @@ export default function GlobalSearchPage() {
                       <td className="py-2 px-3">{row.trn_id || "-"}</td>
                       <td className="py-2 px-3 capitalize">{String(row.type || "-").replaceAll("_", " ")}</td>
                       <td className="py-2 px-3">{row.name || "-"}</td>
+                      <td className="py-2 px-3">{row.phone || "-"}</td>
                       <td className="py-2 px-3">{row.account || "-"}</td>
                       <td className="py-2 px-3 max-w-[280px]">
                         <p className="truncate">{row.notes || "-"}</p>
-                        {(row.module === "transactions" || row.module === "expenses") && row.is_reversed && (
-                          <div className="text-xs text-danger mt-1 space-y-0.5">
-                            <p>Reversed</p>
-                            {row.reversed_by && <p>By: {row.reversed_by}</p>}
-                            {row.reversed_at && <p>On: {new Date(row.reversed_at).toLocaleString()}</p>}
-                            {row.reversal_reason && <p>Reason: {row.reversal_reason}</p>}
-                          </div>
-                        )}
                       </td>
                       <td className="py-2 px-3 text-right">{row.amount ?? "-"}</td>
                       <td className="py-2 px-3 text-right">
-                        <Link
-                          href={`${base}/${row.module === "transactions" ? "transactions" : row.module}`}
-                          className="text-[var(--color-primary)] hover:underline"
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 text-[var(--color-primary)] hover:underline"
+                          onClick={() => setViewingRecord(row)}
                         >
                           View
-                        </Link>
+                        </Button>
                       </td>
                     </tr>
                   ))}
@@ -280,6 +278,64 @@ export default function GlobalSearchPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!viewingRecord} onOpenChange={(open) => !open && setViewingRecord(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Details</DialogTitle>
+          </DialogHeader>
+          {viewingRecord && (
+            <div className="space-y-4 py-2">
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Date</span>
+                <span className="col-span-2">{new Date(viewingRecord.date).toLocaleString()}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Module</span>
+                <span className="col-span-2 capitalize">{viewingRecord.module}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Type</span>
+                <span className="col-span-2 capitalize">{String(viewingRecord.type || "-").replaceAll("_", " ")}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">TRN ID</span>
+                <span className="col-span-2">{viewingRecord.trn_id || "-"}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Name</span>
+                <span className="col-span-2">{viewingRecord.name || "-"}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Mobile No</span>
+                <span className="col-span-2">{viewingRecord.phone || "-"}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Account No</span>
+                <span className="col-span-2">{viewingRecord.account || "-"}</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 border-b border-[var(--color-border)] pb-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Amount</span>
+                <span className="col-span-2 font-bold text-lg text-[var(--color-primary)]">
+                  {bank?.currency} {viewingRecord.amount}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <span className="font-semibold text-[var(--color-text-muted)]">Notes</span>
+                <span className="col-span-2">{viewingRecord.notes || "-"}</span>
+              </div>
+              <div className="pt-4 flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setViewingRecord(null)}>Close</Button>
+                <Link
+                  href={`${base}/${viewingRecord.module === "transactions" ? "transactions" : viewingRecord.module}`}
+                >
+                  <Button>Go to {viewingRecord.module}</Button>
+                </Link>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

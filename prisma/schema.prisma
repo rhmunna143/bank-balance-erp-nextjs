@@ -125,11 +125,13 @@ model Transaction {
   amount           Decimal
   commission       Decimal  @default(0)
   customerName     String?
+  customerPhone    String?
   customerAccount  String?
   motherAccountId  String?
   profitAccountId  String?
   source           String?  // for cash_in: 'mother_account' or 'external'
   reference        String?
+  trnId            String?
   notes            String?
   hasShortage      Boolean  @default(false)
   shortageAmount   Decimal  @default(0)
@@ -162,6 +164,7 @@ model Expense {
   motherAccountId  String?
   description      String?
   receiptUrl       String?
+  trnId            String?
   performedById    String?
   createdAt        DateTime @default(now())
 

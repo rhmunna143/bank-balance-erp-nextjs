@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
 
 export function LandingNavbar({ siteName, logoUrl, primaryColor, bankSlug }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isSignedIn } = useAuth();
   const homeHref = bankSlug ? `/${bankSlug}` : '/';
 
   return (
@@ -31,8 +33,23 @@ export function LandingNavbar({ siteName, logoUrl, primaryColor, bankSlug }) {
             <a href="#contact" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">Contact</a>
           </div>
 
+          {/* Auth Actions */}
+          <div className="hidden md:flex items-center gap-4 ml-4">
+            {!isSignedIn ? (
+              <>
+                <Link href="/sign-in" className="text-sm font-medium text-gray-700 hover:text-gray-900">Sign In</Link>
+                <Link href="/sign-up" className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Get Started</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/dashboard" className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Dashboard</Link>
+                <UserButton afterSignOutUrl="/" />
+              </>
+            )}
+          </div>
+
           {/* Mobile toggle */}
-          <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
+          <button className="md:hidden p-2 ml-auto" onClick={() => setMobileOpen(!mobileOpen)}>
             {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>

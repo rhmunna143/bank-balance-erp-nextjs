@@ -12,6 +12,7 @@ model User {
   fullName   String?
   phone      String?
   avatarUrl  String?
+  isSuperAdmin Boolean @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -23,6 +24,7 @@ model User {
   borrowedLoans Loan[]     @relation("BorrowedLoans")
   issuedLoans   Loan[]     @relation("IssuedLoans")
   returnedLoans LoanReturn[] @relation("ReturnedLoans")
+  joinRequests  BankJoinRequest[]
 }
 
 model Bank {
@@ -57,6 +59,7 @@ model Bank {
   alertConfigs       AlertConfig[]
   loans              Loan[]
   saasPayments       SaaSPayment[]
+  joinRequests       BankJoinRequest[]
 }
 
 model BankMember {
@@ -253,4 +256,18 @@ model SaaSPayment {
   updatedAt        DateTime @updatedAt
 
   bank             Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+}
+
+model BankJoinRequest {
+  id        String   @id @default(uuid())
+  bankId    String
+  userId    String
+  status    String   @default("pending") // 'pending', 'approved', 'rejected'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bank      Bank     @relation(fields: [bankId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bankId, userId]) // Ensure a user can only have one request per bank at a time
 }

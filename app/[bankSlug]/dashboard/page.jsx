@@ -1,1 +1,8 @@
-export { default } from "@/app/(app)/dashboard/page";
+"use client";
+
+import DashboardContent from "@/components/dashboard/DashboardContent";
+
+export default function DashboardPage() {
+  return <DashboardContent />;
+}
+

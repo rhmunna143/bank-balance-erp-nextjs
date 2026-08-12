@@ -30,7 +30,7 @@ import { Users, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function UserManagementPage() {
-  const { users, loading, invite, updateRole, removeMember } = useUsers();
+  const { users, loading, invite, updateRole, removeMember, pendingRequests, approveRequest, rejectRequest } = useUsers();
   const { bank } = useBank();
   const { user } = useAuth();
   const [showInvite, setShowInvite] = useState(false);
@@ -124,6 +124,37 @@ export default function UserManagementPage() {
           <UserPlus className="mr-2 h-4 w-4" /> Invite Member
         </Button>
       </div>
+
+      {pendingRequests && pendingRequests.length > 0 && (
+        <Card className="border-yellow-200 bg-yellow-50/50">
+          <CardHeader>
+            <CardTitle className="text-base text-yellow-800">
+              {pendingRequests.length} Pending Join Request{pendingRequests.length !== 1 ? "s" : ""}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {pendingRequests.map((req) => (
+                <div key={req.id} className="flex items-center justify-between p-4 bg-white rounded-lg border border-yellow-200">
+                  <div>
+                    <p className="font-medium text-gray-900">{req.user.fullName || req.user.email}</p>
+                    <p className="text-sm text-gray-500">{req.user.email}</p>
+                    <p className="text-xs text-gray-400 mt-1">Requested on {new Date(req.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => rejectRequest(req.id)}>
+                      Reject
+                    </Button>
+                    <Button size="sm" onClick={() => approveRequest(req.id, 'operator')}>
+                      Approve as Operator
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

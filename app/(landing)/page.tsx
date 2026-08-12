@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { UserButton, useAuth } from "@clerk/nextjs";
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 function IconBuilding() {
@@ -129,6 +130,7 @@ function StepCard({ step, title, description, cta, href }: {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
   const [scrolled, setScrolled] = useState(false);
+  const { isSignedIn } = useAuth();
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -408,8 +410,24 @@ export default function HomePage() {
             <a href="#pricing" className="agentbank-nav-link">Pricing</a>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <Link href="/sign-in" className="agentbank-btn-ghost">Sign In</Link>
-            <Link href="/sign-up" className="agentbank-btn-primary">Get Started <IconArrowRight /></Link>
+            {!isSignedIn ? (
+              <>
+                <Link href="/sign-in" className="agentbank-btn-ghost">Sign In</Link>
+                <Link href="/sign-up" className="agentbank-btn-primary">Get Started <IconArrowRight /></Link>
+              </>
+            ) : (
+              <>
+                <Link href="/dashboard" className="agentbank-btn-primary">Dashboard</Link>
+                <UserButton 
+                  afterSignOutUrl="/"
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: { width: 40, height: 40 },
+                    }
+                  }}
+                />
+              </>
+            )}
           </div>
         </nav>
 

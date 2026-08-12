@@ -1,9 +1,17 @@
 import { useUser, useAuth as useClerkAuth, useClerk } from '@clerk/nextjs';
 
+import useSWR from 'swr';
+import { getCurrentUser } from '@/services/userService';
+
 export function useAuth() {
   const { user, isLoaded, isSignedIn } = useUser();
   const { sessionId } = useClerkAuth();
   const clerk = useClerk();
+
+  const { data: dbUser } = useSWR(
+    isSignedIn ? 'currentUser' : null,
+    getCurrentUser
+  );
 
   // Map Clerk user to our expected format
   const mappedUser = user ? {
@@ -11,13 +19,14 @@ export function useAuth() {
     email: user.primaryEmailAddress?.emailAddress,
     full_name: user.fullName,
     avatar_url: user.imageUrl,
+    isSuperAdmin: dbUser?.isSuperAdmin || false,
   } : null;
 
   return {
     user: mappedUser,
     profile: mappedUser, // Usually the same as user for Clerk
     session: sessionId,
-    isSuperAdmin: false, // You could check clerk metadata for roles
+    isSuperAdmin: dbUser?.isSuperAdmin || false,
     loading: !isLoaded,
     initialized: isLoaded,
     signIn: () => clerk.redirectToSignIn(),

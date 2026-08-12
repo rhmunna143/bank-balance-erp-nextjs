@@ -13,6 +13,14 @@ export function useUsers() {
     }
   );
 
+  const { data: pendingData, mutate: mutatePending } = useSWR(
+    bankId ? ['pendingRequests', bankId] : null,
+    async ([, bId]) => {
+      const res = await userService.getPendingRequests(bId as string);
+      return res;
+    }
+  );
+
   return {
     users: data || [],
     loading: isLoading,
@@ -31,5 +39,15 @@ export function useUsers() {
       await userService.updateRole(memberId, role);
       await mutate();
     },
+    pendingRequests: pendingData || [],
+    approveRequest: async (requestId: string, role: string) => {
+      await userService.approveJoinRequest(requestId, role);
+      await mutatePending();
+      await mutate(); // refresh members too
+    },
+    rejectRequest: async (requestId: string) => {
+      await userService.rejectJoinRequest(requestId);
+      await mutatePending();
+    }
   };
 }

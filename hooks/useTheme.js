@@ -1,6 +1,6 @@
 import { useThemeStore } from '@/stores/themeStore';
 
 export function useTheme() {
-  const { theme, setTheme, initTheme } = useThemeStore();
-  return { theme, setTheme, initTheme };
+  const { theme, setTheme, mode, setMode, initTheme } = useThemeStore();
+  return { theme, setTheme, mode, setMode, initTheme };
 }

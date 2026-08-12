@@ -35,6 +35,39 @@
   --color-success: #00A651;
 }
 
+.dark {
+  --color-primary: #3B82F6;
+  --color-primary-hover: #60A5FA;
+  --color-primary-light: #1E3A8A;
+  --color-secondary: #9CA3AF;
+  --color-accent: #10B981;
+  --color-background: #0F172A;
+  --color-surface: #1E293B;
+  --color-text: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  --color-border: #334155;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
+  --color-success: #34D399;
+}
+
+.dark[data-theme="bank-asia"] {
+  --color-primary: #10B981;
+  --color-primary-hover: #34D399;
+  --color-primary-light: #064E3B;
+  --color-secondary: #9CA3AF;
+  --color-accent: #FBBF24;
+  --color-background: #022C22;
+  --color-surface: #064E3B;
+  --color-text: #F8FAFC;
+  --color-text-muted: #A7F3D0;
+  --color-border: #047857;
+  --color-danger: #F87171;
+  --color-warning: #FBBF24;
+  --color-success: #34D399;
+}
+
+
 * {
   margin: 0;
   padding: 0;

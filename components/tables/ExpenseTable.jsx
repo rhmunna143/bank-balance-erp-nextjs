@@ -32,7 +32,10 @@ export function ExpenseTable({ expenses = [], onEdit, onReverse }) {
         </thead>
         <tbody>
           {expenses.map((expense) => (
-            <tr key={expense.id} className="border-b border-border hover:bg-gray-50 transition-colors">
+            <tr 
+              key={expense.id} 
+              className="border-b border-border hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors"
+            >
               <td className="py-3 px-4 whitespace-nowrap">{formatDateTime(expense.created_at)}</td>
               <td className="py-3 px-4">
                 <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-medium">

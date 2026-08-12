@@ -52,7 +52,7 @@ export function LoanTable({ loans = [], onReturn, onSelect }) {
             return (
               <tr
                 key={loan.id}
-                className="border-b border-border hover:bg-gray-50 transition-colors cursor-pointer"
+                className="border-b border-border hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                 onClick={() => onSelect?.(loan)}
               >
                 <td className="py-3 px-4">

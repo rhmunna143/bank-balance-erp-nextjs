@@ -56,9 +56,9 @@ export function TransactionTable({ transactions = [], onEdit, onReverse }) {
             const isCashIn = txn.type === 'cash_in';
             const fundInto = getFundInto(txn);
             return (
-              <tr
+              <tr 
                 key={txn.id}
-                className="border-b border-border hover:bg-gray-50 cursor-pointer transition-colors"
+                className="border-b border-border hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                 onClick={() => onEdit?.(txn)}
               >
                 <td className="py-3 px-4 whitespace-nowrap">{formatDateTime(txn.created_at)}</td>

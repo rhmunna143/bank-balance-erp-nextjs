@@ -1,11 +1,12 @@
 "use client";
 
-import { Menu, Bell, LogOut, User, ChevronDown, RefreshCw, RotateCcw } from 'lucide-react';
+import { Menu, Bell, LogOut, User, ChevronDown, RefreshCw, RotateCcw, Moon, Sun } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useBank } from '@/hooks/useBank';
 import { useAlerts } from '@/hooks/useAlerts';
+import { useTheme } from '@/hooks/useTheme';
 import { useTransactionStore } from '@/stores/transactionStore';
 
 export function Topbar({ onMenuClick }) {
@@ -13,6 +14,7 @@ export function Topbar({ onMenuClick }) {
   const { bank } = useBank();
   const { alerts } = useAlerts(bank?.id);
   const { triggerRefresh } = useTransactionStore();
+  const { mode, setMode } = useTheme();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [spinning, setSpinning] = useState(false);
@@ -36,7 +38,7 @@ export function Topbar({ onMenuClick }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-surface px-4 md:px-6">
       {/* Mobile menu button */}
-      <button onClick={onMenuClick} className="lg:hidden rounded-md p-2 hover:bg-gray-100">
+      <button onClick={onMenuClick} className="lg:hidden rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800">
         <Menu className="h-5 w-5" />
       </button>
 
@@ -56,7 +58,7 @@ export function Topbar({ onMenuClick }) {
             triggerRefresh();
             setTimeout(() => setSpinning(false), 800);
           }}
-          className="rounded-md p-2 hover:bg-gray-100"
+          className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
           title="Refresh data"
         >
           <RefreshCw className={`h-5 w-5 text-[var(--color-text-muted)] transition-transform ${spinning ? 'animate-spin' : ''}`} />
@@ -65,16 +67,29 @@ export function Topbar({ onMenuClick }) {
         {/* Hard Refresh button */}
         <button
           onClick={() => window.location.reload()}
-          className="rounded-md p-2 hover:bg-gray-100"
+          className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
           title="Hard refresh (reload page)"
         >
           <RotateCcw className="h-5 w-5 text-[var(--color-text-muted)]" />
         </button>
 
+        {/* Theme Toggle button */}
+        <button
+          onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}
+          className="rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+          title="Toggle dark mode"
+        >
+          {mode === 'dark' ? (
+            <Sun className="h-5 w-5 text-[var(--color-text-muted)]" />
+          ) : (
+            <Moon className="h-5 w-5 text-[var(--color-text-muted)]" />
+          )}
+        </button>
+
         {/* Alerts bell */}
         <button
           onClick={() => router.push('/dashboard')}
-          className="relative rounded-md p-2 hover:bg-gray-100"
+          className="relative rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <Bell className="h-5 w-5 text-[var(--color-text-muted)]" />
           {alerts.length > 0 && (
@@ -88,7 +103,7 @@ export function Topbar({ onMenuClick }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100"
+            className="flex items-center gap-2 rounded-md p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white text-sm font-medium">
               {profile?.full_name?.[0]?.toUpperCase() || 'U'}
@@ -106,7 +121,7 @@ export function Topbar({ onMenuClick }) {
                   setDropdownOpen(false);
                   router.push('/profile');
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50"
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-slate-700"
               >
                 <User className="h-4 w-4" />
                 Profile
@@ -114,7 +129,7 @@ export function Topbar({ onMenuClick }) {
               <hr className="my-1 border-border" />
               <button
                 onClick={handleSignOut}
-                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-danger hover:bg-gray-50"
+                className="flex w-full items-center gap-2 px-4 py-2 text-sm text-danger hover:bg-red-50 dark:hover:bg-red-900/30"
               >
                 <LogOut className="h-4 w-4" />
                 Sign Out

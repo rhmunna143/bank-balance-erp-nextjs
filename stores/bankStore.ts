@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getBankByMember, getBankBySlug, createBank, updateBank, getExpenseCategories, addExpenseCategory } from '@/services/bankService';
+import { getBankByMember, getBankBySlug, getBankWithRoleBySlug, createBank, updateBank, getExpenseCategories, addExpenseCategory } from '@/services/bankService';
 
 export const useBankStore = create((set: any, get: any) => ({
   bank: null as any,
@@ -31,12 +31,9 @@ export const useBankStore = create((set: any, get: any) => ({
   loadBankBySlug: async (slug: string) => {
     set({ loading: true });
     try {
-      const bank = await getBankBySlug(slug);
-      if (bank) {
-        // Since we are migrating away from Supabase client-side queries,
-        // we assume for now that if they can access this via a slug they are either an owner or viewing a public landing page.
-        // A dedicated Server Action should be written if fine-grained role checks are needed here.
-        let userRole = null; 
+      const result = await getBankWithRoleBySlug(slug);
+      if (result) {
+        const { userRole, ...bank } = result;
         
         const categories = userRole ? await getExpenseCategories(bank.id) : [];
         set({ bank, userRole, bankSlug: slug, expenseCategories: categories, loading: false, loaded: true });

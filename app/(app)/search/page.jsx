@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useBank } from "@/hooks/useBank";
 import * as transactionService from "@/services/transactionService";
 import * as expenseService from "@/services/expenseService";
-import { loanService } from "@/services/loanService";
+import { getAll } from "@/services/loanService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -77,7 +77,7 @@ export default function GlobalSearchPage() {
             })
           : Promise.resolve({ data: [] }),
         wantsLoans
-          ? loanService.getAll(bank.id, {
+          ? getAll(bank.id, {
               limit: 300,
               offset: 0,
               startDate: startISO,

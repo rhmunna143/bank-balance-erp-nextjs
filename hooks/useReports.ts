@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { reportService } from '@/services/reportService';
+import { generateReportData } from '@/services/reportService';
 import { useBank } from './useBank';
 
 export function useReports() {
@@ -11,7 +11,7 @@ export function useReports() {
     if (!bankId) return null;
     setLoading(true);
     try {
-      const data = await reportService.generateReportData(bankId, startDate, endDate, reportType);
+      const data = await generateReportData(bankId, startDate, endDate, reportType);
       setReportData(data);
       return data;
     } catch (error) {

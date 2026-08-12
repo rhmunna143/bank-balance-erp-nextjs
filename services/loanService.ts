@@ -6,8 +6,7 @@ import { serialize } from '@/lib/serialize';
 
 // NOTE: Prisma Accelerate does NOT support interactive $transaction.
 
-export const loanService = {
-  async issueLoan(params: any) {
+export async function issueLoan(params: any) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
@@ -45,9 +44,9 @@ export const loanService = {
     });
 
     return serialize(loan);
-  },
+  }
 
-  async returnLoan(params: any) {
+export async function returnLoan(params: any) {
     const { userId } = await auth();
     if (!userId) throw new Error("Unauthorized");
 
@@ -95,9 +94,9 @@ export const loanService = {
     });
 
     return serialize(loanReturn);
-  },
+  }
 
-  async getAll(bankId: string, filters: any = {}) {
+export async function getAll(bankId: string, filters: any = {}) {
     const query: any = {
       where: { bankId },
       include: {
@@ -130,9 +129,9 @@ export const loanService = {
     ]);
 
     return { data: serialize(data), count };
-  },
+  }
 
-  async getReturns(loanId: string) {
+export async function getReturns(loanId: string) {
     const data = await prisma.loanReturn.findMany({
       where: { loanId },
       include: {
@@ -141,9 +140,9 @@ export const loanService = {
       orderBy: { createdAt: 'desc' }
     });
     return serialize(data);
-  },
+  }
 
-  async getReturnsByDateRange(bankId: string, startDate: string, endDate: string) {
+export async function getReturnsByDateRange(bankId: string, startDate: string, endDate: string) {
     const returns = await prisma.loanReturn.findMany({
       where: {
         bankId,
@@ -184,14 +183,14 @@ export const loanService = {
     });
 
     return serialize(enriched);
-  },
+  }
 
-  async getById(loanId: string) {
+export async function getById(loanId: string) {
     const loan = await prisma.loan.findUnique({ where: { id: loanId } });
     return serialize(loan);
-  },
+  }
 
-  async updateLoan(loanId: string, updates: any) {
+export async function updateLoan(loanId: string, updates: any) {
     const loan = await prisma.loan.update({
       where: { id: loanId },
       data: {
@@ -201,5 +200,4 @@ export const loanService = {
       }
     });
     return serialize(loan);
-  },
-};
+  }

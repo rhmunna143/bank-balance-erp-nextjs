@@ -1,10 +1,10 @@
 "use server";
 
 import prisma from '@/lib/prisma';
-import { loanService } from './loanService';
+import { getReturnsByDateRange } from './loanService';
+import { serialize } from '@/lib/serialize';
 
-export const reportService = {
-  async generateReportData(bankId: string, startDate: string, endDate: string, reportType = 'full') {
+export async function generateReportData(bankId: string, startDate: string, endDate: string, reportType = 'full') {
     const startISO = new Date(`${startDate}T00:00:00`);
     const endISO = new Date(`${endDate}T23:59:59`);
 
@@ -55,7 +55,7 @@ export const reportService = {
 
     // Loan returns
     if (includeTransactions) {
-      promises.push(loanService.getReturnsByDateRange(bankId, startISO.toISOString(), endISO.toISOString()));
+      promises.push(getReturnsByDateRange(bankId, startISO.toISOString(), endISO.toISOString()));
     } else {
       promises.push(Promise.resolve([]));
     }
@@ -117,7 +117,7 @@ export const reportService = {
     }));
     const totalMotherBalance = motherAccountBalances.reduce((sum: number, ma: any) => sum + ma.balance, 0);
 
-    return {
+    return serialize({
       reportType,
       totalDeposits,
       totalWithdrawals,
@@ -141,6 +141,5 @@ export const reportService = {
       loanReturnCount: (loanReturns || []).length,
       totalLoanReturns,
       expenseCount: expenses.length,
-    };
-  },
-};
+    });
+  }

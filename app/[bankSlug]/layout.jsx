@@ -5,7 +5,7 @@ import { useParams, usePathname, useRouter } from "next/navigation";
 import { useBankStore } from "@/stores/bankStore";
 import { useUser } from "@clerk/nextjs";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { FullPageSpinner } from "@/components/common/LoadingSpinner";
+import { DashboardSkeleton } from "@/components/common/DashboardSkeleton";
 import { RESERVED_SLUGS } from "@/utils/constants";
 
 export default function BankSlugLayout({ children }) {
@@ -55,7 +55,7 @@ export default function BankSlugLayout({ children }) {
     load();
   }, [user, bankSlug, loadBankBySlug, router, isLandingPage]);
 
-  if (loading) return <FullPageSpinner />;
+  if (loading) return <DashboardSkeleton />;
 
   // Landing page: render without AppLayout wrapper
   if (isLandingPage) {

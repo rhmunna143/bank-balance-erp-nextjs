@@ -6,7 +6,7 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAuth } from '@/hooks/useAuth';
 import { useBankStore } from '@/stores/bankStore';
-import { FullPageSpinner } from '@/components/common/LoadingSpinner';
+import { DashboardSkeleton } from '@/components/common/DashboardSkeleton';
 
 export function AppLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,18 +18,10 @@ export function AppLayout({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!initialized || !user) return;
-    if (bank || bankLoaded) return;
-    loadBank(user.id);
-  }, [initialized, user, bank, bankLoaded, loadBank]);
+    // Legacy redirect removed: Layouts now handle loading and redirects
+  }, []);
 
-  useEffect(() => {
-    if (initialized && bankLoaded && !bank && user) {
-      router.push('/create-bank');
-    }
-  }, [initialized, bankLoaded, bank, user, router]);
-
-  if (!initialized || !bankLoaded) return <FullPageSpinner />;
+  if (!initialized) return <DashboardSkeleton />;
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">

@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { EmptyState } from "@/components/common/EmptyState";
-import { loanService } from "@/services/loanService";
+import { getAll, issueLoan, returnLoan, getReturns, updateLoan } from "@/services/loanService";
 import * as userService from "@/services/userService";
 import { useHandCash } from "@/hooks/useHandCash";
 import { useMotherAccounts } from "@/hooks/useMotherAccounts";
@@ -68,7 +68,7 @@ export default function LoansPage() {
       const filters = { limit: ITEMS_PER_PAGE, offset };
       if (statusFilter) filters.status = statusFilter;
 
-      const { data, count } = await loanService.getAll(bank.id, filters);
+      const { data, count } = await getAll(bank.id, filters);
       setLoans(data || []);
       setTotal(count || 0);
     } catch (error) {
@@ -99,7 +99,7 @@ export default function LoansPage() {
   const handleIssueLoan = async (data) => {
     setSubmitting(true);
     try {
-      await loanService.issueLoan({
+      await issueLoan({
         bank_id: bank.id,
         borrower_user_id: data.borrower_user_id,
         trn_id: data.trn_id || null,
@@ -127,7 +127,7 @@ export default function LoansPage() {
   const handleReturnLoan = async (data) => {
     setSubmitting(true);
     try {
-      await loanService.returnLoan({
+      await returnLoan({
         loan_id: data.loan_id,
         trn_id: data.trn_id || null,
         amount: data.amount,
@@ -166,7 +166,7 @@ export default function LoansPage() {
     });
     setDetailsOpen(true);
     try {
-      const returns = await loanService.getReturns(loan.id);
+      const returns = await getReturns(loan.id);
       setLoanReturns(returns || []);
     } catch {
       setLoanReturns([]);
@@ -177,7 +177,7 @@ export default function LoansPage() {
     if (!loanDetails?.id) return;
     setSavingLoan(true);
     try {
-      await loanService.updateLoan(loanDetails.id, {
+      await updateLoan(loanDetails.id, {
         due_date: loanDetails.due_date || null,
         notes: loanDetails.notes || null,
         trn_id: loanDetails.trn_id || null,

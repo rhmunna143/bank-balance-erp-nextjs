@@ -25,6 +25,26 @@ export async function getBankBySlug(slug: string) {
   return bank;
 }
 
+export async function getBankWithRoleBySlug(slug: string) {
+  const bank = await getBankBySlug(slug);
+  if (!bank) return null;
+  
+  let userRole = null;
+  try {
+    const { userId } = await auth();
+    if (userId) {
+      const member = await prisma.bankMember.findFirst({
+        where: { bankId: bank.id, userId },
+      });
+      if (member) userRole = member.role;
+    }
+  } catch (e) {
+    // Auth might fail on public routes, ignore
+  }
+  
+  return serialize({ ...bank, userRole });
+}
+
 export async function getRootBank() {
   const bank = await prisma.bank.findFirst({
     where: { isActive: true },

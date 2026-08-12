@@ -58,6 +58,7 @@ model Bank {
   dailyLogs          DailyLog[]
   alertConfigs       AlertConfig[]
   loans              Loan[]
+  backups            BankBackup[]
   saasPayments       SaaSPayment[]
   joinRequests       BankJoinRequest[]
 }
@@ -270,4 +271,15 @@ model BankJoinRequest {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([bankId, userId]) // Ensure a user can only have one request per bank at a time
+}
+
+model BankBackup {
+  id          String   @id @default(uuid())
+  bankId      String
+  label       String
+  backupData  String   @db.Text
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  bank        Bank     @relation(fields: [bankId], references: [id])
 }

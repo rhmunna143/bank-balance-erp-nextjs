@@ -10,59 +10,63 @@ Agent Bank ERP is a multi-tenant, production-oriented banking/agent management w
 
 **Why this project matters (TL;DR for recruiters)**
 
-- Built as a real-world banking/agent management system demonstrating multi-tenant data handling, transaction flows, reporting, role-based access, and integrations with subbase as a backend.
-- Production-ready UI and UX patterns, detailed reporting (PDF export), and robust services layering make this a portfolio-ready project for backend/front-end roles and full-stack candidates.
+- Built as a real-world banking/agent management system demonstrating multi-tenant data handling, transaction flows, reporting, role-based access, and integrations with PostgreSQL and Prisma ORM.
+- Production-ready UI and UX patterns, sleek dark mode, detailed reporting (PDF export), and robust Server Actions architecture make this a portfolio-ready project for backend/front-end roles and full-stack candidates.
 
 ---
 
 **Key Features**
 
-- Multi-tenant bank views (per-bank dashboard and operations)
+- Multi-tenant bank views (dashboard and operations per bank)
 - Full transaction lifecycle: deposits, withdrawals, fund transfers, cash-in, loan returns
 - Expense management with categories and account-level tracking
-- Hand-cash verification and mother-account aggregation
+- User-wise loan tracking and summary metrics
+- Hand-cash verification, daily log generation, and mother-account aggregation
 - PDF reporting with detailed transaction, expense, and signature-ready export
-- Role-based pages for admin, superadmin and agents
-- Search, user management, and reporting modules
+- Role-based pages for admins, superadmins, and agents via Clerk authentication
+- Built-in Dark Mode and customizable UI themes
+- Automated database backups & restore functionality
 
 **Unique / Notable Features**
 
 - Sophisticated PDF report generator with automatic pagination and signature layout
 - Multi-account (mother/profit/hand cash) handling designed for agent-banking workflows
-- Realistic seeded SQL migrations and RLS (row-level security) policies (in `supabase/`)
-- Modular services layer (under `services/`) for clean separation of concerns and easier testing
+- Strongly typed database operations using Prisma ORM (schema in `prisma/schema.prisma`)
+- Modular services layer (under `services/`) leveraging Next.js Server Actions for clean separation of concerns and data mutation
 
 ---
 
 **Impact & Real-life Usefulness**
 
 - Enables management of agent banking operations used by microfinance, community banks, and agent networks.
-- Simplifies daily reconciliation via hand-cash verification and detailed PDF exports for audit trails.
+- Simplifies daily reconciliation via hand-cash verification, automated daily logs, and detailed PDF exports for audit trails.
 - Supports operational transparency with per-transaction metadata (TRN IDs, sources, destinations).
 
 **Who should use / Why it’s needed**
 
 - Recruiters/interviewers: shows ability to build full-stack financial applications with real-world constraints.
-- Backend engineers: demonstrates multi-tenant DB design and secure access patterns.
-- Frontend engineers: shows complex UI construction in Next.js including data tables, forms, and print-ready exports.
+- Backend engineers: demonstrates multi-tenant DB design, Prisma relations, and secure Server Actions.
+- Frontend engineers: shows complex UI construction in Next.js including data tables, forms, print-ready exports, and dynamic theming.
 - Product teams at fintechs or microfinance organizations looking for prototype workflows.
 
 ---
 
 **Technologies & Architecture**
 
-- Frontend: Next.js (app router), React, Tailwind CSS
-- Backend: Supabase (Postgres, auth, storage), SQL migrations in `supabase/`
-- State & Services: modular `services/` and `stores/` folders for business logic and state management
+- Frontend: Next.js (App Router), React, Tailwind CSS, shadcn/ui
+- Backend: Next.js Server Actions, PostgreSQL (via Prisma ORM)
+- Authentication: Clerk
+- State & Services: modular `services/` and Zustand `stores/` for business logic and state management
 - Utilities: `utils/` contains helpers for currency, date formatting, and PDF generation
 - PDF generation: `jspdf` + `jspdf-autotable` (see `utils/generateReportPdf.js`)
 
 Project structure highlights:
 
-- `app/` — Next.js UI routes and pages (multi-tenant under `[bankSlug]`)
-- `services/` — API-facing business logic wrappers
-- `supabase/` — SQL migrations, RLS policies, and seed scripts
-- `utils/` — helpers, formatters, and the PDF generator
+- `app/` — Next.js UI routes and pages
+- `services/` — Next.js Server Actions handling direct database interactions
+- `prisma/` — Database schema (`schema.prisma`) and migrations
+- `components/` — Reusable UI components, tables, charts, and layout elements
+- `utils/` — Helpers, formatters, and the PDF generator
 
 ---
 
@@ -72,13 +76,20 @@ Prerequisites:
 
 - Node.js 18+ (or compatible runtime)
 - npm / pnpm / yarn
-- Supabase project (local or hosted) if you want full backend features
+- A PostgreSQL database instance
+- A Clerk application (for authentication keys)
 
-Quick start (frontend only, dev mode):
+Quick start:
 
 ```bash
 # install
 npm install
+
+# push Prisma schema to database
+npx prisma db push
+
+# generate Prisma client
+npx prisma generate
 
 # run dev
 npm run dev
@@ -86,9 +97,17 @@ npm run dev
 # open http://localhost:3000
 ```
 
-If you want to connect to Supabase, create a `.env.local` at project root with the expected keys (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, etc.) matching `services/supabaseClient.js` usage.
+Environment Variables (`.env.local`):
+Create a `.env.local` at project root with the following keys:
+```env
+# Prisma / PostgreSQL
+DATABASE_URL="postgresql://user:password@localhost:5432/agent_bank"
+DIRECT_URL="postgresql://user:password@localhost:5432/agent_bank"
 
-For database migrations and SQL scripts, review `supabase/` and run them against your Supabase instance.
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
+CLERK_SECRET_KEY="sk_test_..."
+```
 
 ---
 
@@ -97,8 +116,9 @@ For database migrations and SQL scripts, review `supabase/` and run them against
 The project is configured to deploy on Vercel. The provided live demo is hosted at the link above. To deploy:
 
 1. Connect the repository to Vercel.
-2. Set environment variables in the Vercel dashboard (Supabase keys and any runtime secrets).
-3. Deploy (Vercel will build the Next.js app automatically).
+2. Set the environment variables (`DATABASE_URL`, Clerk keys) in the Vercel dashboard.
+3. Add a build command or `postinstall` script to run `prisma generate`.
+4. Deploy (Vercel will build the Next.js app automatically).
 
 ---
 
@@ -106,13 +126,6 @@ The project is configured to deploy on Vercel. The provided live demo is hosted 
 
 - Manual QA flows: create banks, perform deposits/withdrawals, upload/verify hand cash, and export PDF reports.
 - Check generated reports: `utils/generateReportPdf.js` includes formatting and totals.
-
----
-
-**Security & Production Notes**
-
-- SQL scripts and RLS policies are included under `supabase/` — validate them before production use.
-- Secrets must be stored in environment variables and not committed to source control.
 
 ---
 
@@ -143,4 +156,4 @@ This project does not include a license file by default. Add a `LICENSE` file (M
 
 ---
 
-_Short note for recruiters:_ This repository demonstrates building a production-oriented fintech web app end-to-end: multi-tenant flows, secure DB considerations, PDF exports for auditing, and a maintainable services architecture — an excellent artifact to evaluate a candidate's full-stack capabilities.
+_Short note for recruiters:_ This repository demonstrates building a production-oriented fintech web app end-to-end: multi-tenant flows, secure DB considerations with Prisma, Clerk authentication, PDF exports for auditing, and a maintainable Server Actions architecture — an excellent artifact to evaluate a candidate's full-stack capabilities.

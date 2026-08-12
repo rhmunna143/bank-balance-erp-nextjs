@@ -48,7 +48,7 @@ export function LoanTable({ loans = [], onReturn, onSelect }) {
         </thead>
         <tbody>
           {loans.map((loan) => {
-            const remaining = parseFloat(loan.amount) - parseFloat(loan.returned_amount || 0);
+            const remaining = parseFloat(loan.amount) - parseFloat(loan.returnedAmount || 0);
             return (
               <tr
                 key={loan.id}
@@ -56,23 +56,23 @@ export function LoanTable({ loans = [], onReturn, onSelect }) {
                 onClick={() => onSelect?.(loan)}
               >
                 <td className="py-3 px-4">
-                  <p className="font-medium">{loan.borrower?.full_name || 'Unknown'}</p>
+                  <p className="font-medium">{loan.borrower?.fullName || 'Unknown'}</p>
                   <p className="text-xs text-[var(--color-text-muted)]">{loan.borrower?.email}</p>
-                  {loan.trn_id && (
-                    <p className="text-xs text-[var(--color-primary)]">TRN: {loan.trn_id}</p>
+                  {loan.trnId && (
+                    <p className="text-xs text-[var(--color-primary)]">TRN: {loan.trnId}</p>
                   )}
                 </td>
                 <td className="py-3 px-4 text-right font-medium">
                   {formatCurrency(loan.amount, currencySymbol)}
                 </td>
                 <td className="py-3 px-4 text-right text-green-600 font-medium">
-                  {formatCurrency(loan.returned_amount || 0, currencySymbol)}
+                  {formatCurrency(loan.returnedAmount || 0, currencySymbol)}
                 </td>
                 <td className="py-3 px-4 text-right text-red-600 font-medium">
                   {formatCurrency(remaining, currencySymbol)}
                 </td>
                 <td className="py-3 px-4 text-xs">
-                  {SOURCE_LABELS[loan.source_type] || loan.source_type}
+                  {SOURCE_LABELS[loan.sourceType] || loan.sourceType}
                 </td>
                 <td className="py-3 px-4">
                   <span className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${STATUS_COLORS[loan.status] || ''}`}>
@@ -80,10 +80,10 @@ export function LoanTable({ loans = [], onReturn, onSelect }) {
                   </span>
                 </td>
                 <td className="py-3 px-4 whitespace-nowrap text-xs">
-                  {loan.due_date ? new Date(loan.due_date).toLocaleDateString() : '—'}
+                  {loan.dueDate ? new Date(loan.dueDate).toLocaleDateString() : '—'}
                 </td>
                 <td className="py-3 px-4 whitespace-nowrap text-xs">
-                  {formatDateTime(loan.created_at)}
+                  {formatDateTime(loan.createdAt)}
                 </td>
                 <td className="py-3 px-4 text-right">
                   {loan.status !== 'returned' && (

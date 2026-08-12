@@ -73,8 +73,8 @@ export function LoanIssueForm({
             </SelectTrigger>
             <SelectContent>
               {members.map((m) => (
-                <SelectItem key={m.user_id} value={m.user_id}>
-                  {m.profiles?.full_name || m.profiles?.email || m.user_id}
+                <SelectItem key={m.userId} value={m.userId}>
+                  {m.profiles?.fullName || m.profiles?.email || m.userId}
                 </SelectItem>
               ))}
             </SelectContent>

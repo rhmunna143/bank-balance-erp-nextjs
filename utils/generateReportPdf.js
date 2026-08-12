@@ -254,15 +254,15 @@ export function generateReportPdf({
       const amt = Number(txn.amount || 0);
       if (isCredit) totalCredit += amt; else totalDebit += amt;
       const fundInto = isCashIn
-        ? (txn.mother_account_id ? (txn.mother_accounts?.name || 'Mother Account') : txn.profit_account_id ? (txn.profit_accounts?.name || 'Profit Account') : 'Hand Cash')
+        ? (txn.motherAccountId ? (txn.motherAccount?.name || 'Mother Account') : txn.profitAccountId ? (txn.profitAccount?.name || 'Profit Account') : 'Hand Cash')
         : '-';
       return [
-        fmtDateOnly(txn.created_at),
-        txn.trn_id || '-',
+        fmtDateOnly(txn.createdAt),
+        txn.trnId || '-',
         (txn.type || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase()),
-        txn.customer_name || '-',
-        txn.customer_account || '-',
-        txn.mother_accounts?.name || txn.mother_accounts?.account_number || '-',
+        txn.customerName || '-',
+        txn.customerAccount || '-',
+        txn.motherAccount?.name || txn.motherAccount?.accountNumber || '-',
         fundInto,
         isCashIn && txn.source ? txn.source : '-',
         isCredit ? fmtCur(txn.amount, sym) : '-',
@@ -330,12 +330,12 @@ export function generateReportPdf({
     const expColumnWidths = distributeWidths(tableWidth, [0.95, 0.85, 1.0, 1.45, 0.95, 0.95, 1.35]);
 
     const expRows = reportData.expenses.map((exp) => [
-      fmtDateOnly(exp.created_at),
-      exp.trn_id || '-',
-      exp.expense_categories?.name || '-',
+      fmtDateOnly(exp.createdAt),
+      exp.trnId || '-',
+      exp.category?.name || '-',
       exp.description || '-',
-      (exp.deduct_from || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase()),
-      exp.mother_accounts?.name || exp.mother_accounts?.account_number || exp.profit_accounts?.name || '-',
+      (exp.deductFrom || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase()),
+      exp.motherAccount?.name || exp.motherAccount?.accountNumber || exp.profitAccount?.name || '-',
       fmtCur(exp.amount, sym),
     ]);
 
@@ -395,10 +395,10 @@ export function generateReportPdf({
     const loanReturnColumnWidths = distributeWidths(tableWidth, [0.9, 0.85, 0.95, 1.4, 1.35, 1.5]);
 
     const loanReturnRows = reportData.loanReturns.map((ret) => [
-      fmtDateOnly(ret.created_at),
-      ret.trn_id || '-',
-      (ret.returned_by_profile?.full_name || ret.returned_by_profile?.email || ret.returned_by) || '-',
-      ret.destination_label || ret.destination_type || '-',
+      fmtDateOnly(ret.createdAt),
+      ret.trnId || '-',
+      ret.borrower?.fullName || ret.borrower?.email || '-',
+      ret.destinationType || '-',
       ret.notes || '-',
       fmtCur(ret.amount, sym),
     ]);

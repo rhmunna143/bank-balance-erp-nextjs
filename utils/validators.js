@@ -102,7 +102,7 @@ export const changePasswordSchema = z.object({
 });
 
 export const loanIssueSchema = z.object({
-  borrower_user_id: z.string().uuid('Please select a borrower'),
+  borrower_user_id: z.string().min(1, 'Please select a borrower'),
   trn_id: z.string().optional(),
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   source_type: z.enum(['hand_cash', 'mother_account', 'profit_account'], {

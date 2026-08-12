@@ -32,11 +32,11 @@ export function LoanReturnForm({
   profitAccounts = [],
 }) {
   const { currencySymbol } = useBank();
-  const remaining = parseFloat(loan.amount) - parseFloat(loan.returned_amount || 0);
-  const defaultDestinationType = loan.source_type || 'hand_cash';
+  const remaining = parseFloat(loan.amount) - parseFloat(loan.returnedAmount || 0);
+  const defaultDestinationType = loan.sourceType || 'hand_cash';
   const defaultDestinationAccountId =
-    loan.source_type === 'mother_account' || loan.source_type === 'profit_account'
-      ? loan.source_account_id || ''
+    loan.sourceType === 'mother_account' || loan.sourceType === 'profit_account'
+      ? loan.sourceAccountId || ''
       : '';
 
   const {
@@ -99,7 +99,7 @@ export function LoanReturnForm({
       <div className="rounded-lg bg-gray-50 p-4 space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-[var(--color-text-muted)]">Borrower</span>
-          <span className="font-medium">{loan.borrower?.full_name || 'Unknown'}</span>
+          <span className="font-medium">{loan.borrower?.fullName || 'Unknown'}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-[var(--color-text-muted)]">Total Amount</span>
@@ -107,7 +107,7 @@ export function LoanReturnForm({
         </div>
         <div className="flex justify-between">
           <span className="text-[var(--color-text-muted)]">Already Returned</span>
-          <span className="font-medium text-green-600">{formatCurrency(loan.returned_amount || 0, currencySymbol)}</span>
+          <span className="font-medium text-green-600">{formatCurrency(loan.returnedAmount || 0, currencySymbol)}</span>
         </div>
         <div className="flex justify-between border-t pt-2">
           <span className="text-[var(--color-text-muted)]">Remaining</span>

@@ -34,6 +34,7 @@ import { useProfitAccounts } from "@/hooks/useProfitAccounts";
 import { useTransactionStore } from "@/stores/transactionStore";
 import { ITEMS_PER_PAGE, LOAN_STATUSES } from "@/utils/constants";
 import { HandCoins, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { formatCurrency } from "@/utils/currency";
 import toast from "react-hot-toast";
 
 export default function LoansPage() {
@@ -50,6 +51,7 @@ export default function LoansPage() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [statusFilter, setStatusFilter] = useState("");
+  const [borrowerFilter, setBorrowerFilter] = useState("");
 
   // Dialog states
   const [issueOpen, setIssueOpen] = useState(false);
@@ -67,6 +69,7 @@ export default function LoansPage() {
       const offset = (page - 1) * ITEMS_PER_PAGE;
       const filters = { limit: ITEMS_PER_PAGE, offset };
       if (statusFilter) filters.status = statusFilter;
+      if (borrowerFilter) filters.borrower_user_id = borrowerFilter;
 
       const { data, count } = await getAll(bank.id, filters);
       setLoans(data || []);
@@ -76,7 +79,7 @@ export default function LoansPage() {
     } finally {
       setLoading(false);
     }
-  }, [bank?.id, page, statusFilter]);
+  }, [bank?.id, page, statusFilter, borrowerFilter]);
 
   const fetchMembers = useCallback(async () => {
     if (!bank?.id) return;
@@ -160,9 +163,9 @@ export default function LoansPage() {
   const handleLoanSelect = async (loan) => {
     setLoanDetails({
       ...loan,
-      due_date: loan.due_date || "",
+      due_date: loan.dueDate || "",
       notes: loan.notes || "",
-      trn_id: loan.trn_id || "",
+      trn_id: loan.trnId || "",
     });
     setDetailsOpen(true);
     try {
@@ -178,9 +181,9 @@ export default function LoansPage() {
     setSavingLoan(true);
     try {
       await updateLoan(loanDetails.id, {
-        due_date: loanDetails.due_date || null,
+        due_date: loanDetails.dueDate || null,
         notes: loanDetails.notes || null,
-        trn_id: loanDetails.trn_id || null,
+        trn_id: loanDetails.trnId || null,
       });
       toast.success("Loan updated");
       setDetailsOpen(false);
@@ -191,6 +194,10 @@ export default function LoansPage() {
       setSavingLoan(false);
     }
   };
+
+  const totalIssued = loans.reduce((sum, loan) => sum + parseFloat(loan.amount || 0), 0);
+  const totalReturned = loans.reduce((sum, loan) => sum + parseFloat(loan.returnedAmount || 0), 0);
+  const totalRemaining = loans.reduce((sum, loan) => sum + (parseFloat(loan.amount || 0) - parseFloat(loan.returnedAmount || 0)), 0);
 
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
@@ -214,7 +221,27 @@ export default function LoansPage() {
       {/* Filters */}
       <Card>
         <CardContent className="py-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+            <Select
+              value={borrowerFilter}
+              onValueChange={(val) => {
+                setBorrowerFilter(val === "all" ? "" : val);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="All Borrowers" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Borrowers</SelectItem>
+                {members.map((m) => (
+                  <SelectItem key={m.userId} value={m.userId}>
+                    {m.profiles?.fullName || m.profiles?.email || m.userId}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select
               value={statusFilter}
               onValueChange={(val) => {
@@ -238,6 +265,7 @@ export default function LoansPage() {
               variant="outline"
               onClick={() => {
                 setStatusFilter("");
+                setBorrowerFilter("");
                 setPage(1);
               }}
             >
@@ -246,6 +274,30 @@ export default function LoansPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Summary Metrics */}
+      {borrowerFilter && loans.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="bg-blue-50 border-blue-100">
+            <CardContent className="p-4 flex flex-col justify-center items-center">
+              <p className="text-sm text-blue-600 font-medium">Total Issued</p>
+              <p className="text-xl font-bold text-blue-700">{formatCurrency(totalIssued, bank?.currencySymbol)}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-green-50 border-green-100">
+            <CardContent className="p-4 flex flex-col justify-center items-center">
+              <p className="text-sm text-green-600 font-medium">Total Returned</p>
+              <p className="text-xl font-bold text-green-700">{formatCurrency(totalReturned, bank?.currencySymbol)}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-red-50 border-red-100">
+            <CardContent className="p-4 flex flex-col justify-center items-center">
+              <p className="text-sm text-red-600 font-medium">Total Remaining</p>
+              <p className="text-xl font-bold text-red-700">{formatCurrency(totalRemaining, bank?.currencySymbol)}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Loans List */}
       <Card>
@@ -348,7 +400,7 @@ export default function LoansPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label>Borrower</Label>
-                  <Input value={loanDetails.borrower?.full_name || ""} disabled />
+                  <Input value={loanDetails.borrower?.fullName || ""} disabled />
                 </div>
                 <div>
                   <Label>Status</Label>
@@ -389,10 +441,10 @@ export default function LoansPage() {
                     {loanReturns.map((ret) => (
                       <div key={ret.id} className="text-xs border-b pb-2">
                         <p>Amount: {ret.amount}</p>
-                        <p>Date: {new Date(ret.created_at).toLocaleString()}</p>
-                        <p>TRN: {ret.trn_id || "-"}</p>
-                        <p>Destination: {ret.destination_type || "-"}</p>
-                        {ret.destination_account_id && <p>Destination Account: {ret.destination_account_id}</p>}
+                        <p>Date: {new Date(ret.createdAt).toLocaleString()}</p>
+                        <p>TRN: {ret.trnId || "-"}</p>
+                        <p>Destination: {ret.destinationType || "-"}</p>
+                        {ret.destinationAccountId && <p>Destination Account: {ret.destinationAccountId}</p>}
                       </div>
                     ))}
                   </div>

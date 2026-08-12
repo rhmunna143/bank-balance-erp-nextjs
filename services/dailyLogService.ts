@@ -28,17 +28,34 @@ export async function getSnapshot(bankId: string, date: string) {
     where: { bankId, createdAt: { gte: startOfDay, lte: endOfDay } }
   });
 
+  const depositCommissions = await prisma.transaction.aggregate({
+    _sum: { commission: true },
+    where: { bankId, type: 'deposit', createdAt: { gte: startOfDay, lte: endOfDay } }
+  });
+
+  const withdrawalCommissions = await prisma.transaction.aggregate({
+    _sum: { commission: true },
+    where: { bankId, type: 'withdrawal', createdAt: { gte: startOfDay, lte: endOfDay } }
+  });
+
   const handCash = await prisma.handCashAccount.findUnique({
     where: { bankId }
   });
 
+  const totalDeposits = Number(deposits._sum.amount || 0);
+  const totalWithdrawals = Number(withdrawals._sum.amount || 0);
+  const totalCashIn = Number(cashIns._sum.amount || 0);
+  const totalExpenses = Number(expenses._sum.amount || 0);
+  const totalCommissions = Number(depositCommissions._sum.commission || 0) + Number(withdrawalCommissions._sum.commission || 0);
+  const closingHandCash = Number(handCash?.balance || 0);
+
   return {
-    total_deposits: Number(deposits._sum.amount || 0),
-    total_withdrawals: Number(withdrawals._sum.amount || 0),
-    total_cash_in: Number(cashIns._sum.amount || 0),
-    total_expenses: Number(expenses._sum.amount || 0),
-    total_commissions: 0,
-    closing_hand_cash: Number(handCash?.balance || 0),
+    total_deposits: totalDeposits,
+    total_withdrawals: totalWithdrawals,
+    total_cash_in: totalCashIn,
+    total_expenses: totalExpenses,
+    total_commissions: totalCommissions,
+    closing_hand_cash: closingHandCash,
   };
 }
 

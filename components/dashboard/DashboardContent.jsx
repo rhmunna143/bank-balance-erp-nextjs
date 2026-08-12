@@ -79,20 +79,20 @@ export default function DashboardContent() {
         // Build balance trend from daily logs
         if (logs && logs.length > 0) {
           setDailyLogs(
-            logs.sort((a, b) => b.log_date.localeCompare(a.log_date))
+            logs.sort((a, b) => new Date(b.logDate).getTime() - new Date(a.logDate).getTime())
           );
           const trendData = logs
-            .sort((a, b) => a.log_date.localeCompare(b.log_date))
+            .sort((a, b) => new Date(a.logDate).getTime() - new Date(b.logDate).getTime())
             .map((log) => ({
-              date: new Date(log.log_date).toLocaleDateString("en-US", {
+              date: new Date(log.logDate).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
               }),
-              handCash: parseFloat(log.closing_hand_cash || 0),
+              handCash: parseFloat(log.closingHandCash || 0),
               motherBalance:
-                parseFloat(log.total_deposits || 0) -
-                parseFloat(log.total_withdrawals || 0),
-              profitBalance: parseFloat(log.total_commissions || 0),
+                parseFloat(log.totalDeposits || 0) -
+                parseFloat(log.totalWithdrawals || 0),
+              profitBalance: parseFloat(log.totalCommissions || 0),
             }));
           setBalanceTrend(trendData);
         }
@@ -125,7 +125,7 @@ export default function DashboardContent() {
       const logs = await dailyLogService.getLatestLogs(bankId, 14);
       if (logs)
         setDailyLogs(
-          logs.sort((a, b) => b.log_date.localeCompare(a.log_date))
+          logs.sort((a, b) => new Date(b.logDate).getTime() - new Date(a.logDate).getTime())
         );
       setLogsExpanded(true);
     } catch (error) {
@@ -279,9 +279,7 @@ export default function DashboardContent() {
                       >
                         <td className="py-2 px-3 flex items-center gap-2">
                           <Calendar className="h-3.5 w-3.5 text-[var(--color-text-muted)]" />
-                          {new Date(
-                            log.log_date + "T00:00:00"
-                          ).toLocaleDateString("en-US", {
+                          {new Date(log.logDate).toLocaleDateString("en-US", {
                             weekday: "short",
                             month: "short",
                             day: "numeric",
@@ -290,31 +288,31 @@ export default function DashboardContent() {
                         </td>
                         <td className="py-2 px-3 text-right text-success font-medium">
                           {formatCurrency(
-                            log.total_deposits || 0,
+                            log.totalDeposits || 0,
                             currencySymbol
                           )}
                         </td>
                         <td className="py-2 px-3 text-right text-warning font-medium">
                           {formatCurrency(
-                            log.total_withdrawals || 0,
+                            log.totalWithdrawals || 0,
                             currencySymbol
                           )}
                         </td>
                         <td className="py-2 px-3 text-right text-primary font-medium">
                           {formatCurrency(
-                            log.total_cash_in || 0,
+                            log.totalCashIn || 0,
                             currencySymbol
                           )}
                         </td>
                         <td className="py-2 px-3 text-right text-danger font-medium">
                           {formatCurrency(
-                            log.total_expenses || 0,
+                            log.totalExpenses || 0,
                             currencySymbol
                           )}
                         </td>
                         <td className="py-2 px-3 text-right font-bold">
                           {formatCurrency(
-                            log.closing_hand_cash || 0,
+                            log.closingHandCash || 0,
                             currencySymbol
                           )}
                         </td>
